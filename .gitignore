@@ -9,3 +9,12 @@ wheels/
 # Virtual environments
 .venv
 uv.lock
+.idea/
+.ipynb_checkpoints/
+old/
+multirun/
+outputs/
+checkpoints/
+lightning_logs/
+logs/
+*.scale_batch_size_*

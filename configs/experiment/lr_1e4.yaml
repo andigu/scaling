@@ -1,0 +1,13 @@
+# @package _global_
+
+model:
+  architecture: resnet50
+  embedding_dim: 64
+  stage3_stride: [1,1,1]
+  stage4_stride: [1,1,1]
+
+training:
+  lr: 1e-4
+
+experiment:
+  name: lr_1e4

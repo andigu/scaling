@@ -22,4 +22,9 @@ dependencies = [
     "tqdm>=4.67.1",
     "wandb>=0.21.0",
     "schedulefree>=1.2.6",
+    "beliefmatching>=0.1.1",
+    "ipykernel>=6.30.0",
+    "transformers>=4.53.3",
+    "qiskit>=2.1.1",
+    "hydra-submitit-launcher>=1.2.0",
 ]

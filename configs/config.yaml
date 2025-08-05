@@ -1,0 +1,43 @@
+defaults:
+  - experiment: baseline
+  - _self_
+
+# Dataset parameters (fixed, not swept)
+dataset:
+  d: 9                    # Surface code distance
+  p: 2.1                  # Error probability parameter
+  rounds_max: 9           # Maximum number of rounds
+
+# Model architecture (main sweep targets)
+model:
+  architecture: resnet50   # resnet18/resnet34/resnet50/resnet101/resnet152
+  embedding_dim: 64      # Embedding dimension
+  stage3_stride: [1,1,1]  # Stage 3 downsampling stride (T,H,W)
+  stage4_stride: [1,1,1]  # Stage 4 downsampling stride (T,H,W)
+
+# Training parameters
+training:
+  lr: 3e-4               # Learning rate (main sweep target)
+  max_steps: 50000       # Maximum training steps
+  log_every_n_steps: 100 # Logging frequency
+  checkpoint_every_n_steps: 10000  # Checkpoint frequency
+  precision: bf16-mixed  # Mixed precision training
+
+# Hardware/performance settings
+hardware:
+  accelerator: auto      # Training accelerator
+  num_workers: 8         # DataLoader workers
+  prefetch_factor: 4     # DataLoader prefetch
+  persistent_workers: true  # Keep workers alive
+
+# Experiment settings
+experiment:
+  name: resnet_experiment  # Experiment name for logging
+  save_dir: /n/netscratch/yelin_lab/Everyone/andigu/scaling/logs        # Directory for logs
+  checkpoint_dir: /n/netscratch/yelin_lab/Everyone/andigu/scaling/checkpoints  # Directory for checkpoints
+
+# Weights & Biases settings
+wandb:
+  project: scaling  # W&B project name
+  entity: null              # W&B entity (team), null uses default
+  tags: [resnet, surface_code, decoder]  # Tags for organizing runs

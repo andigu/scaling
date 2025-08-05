@@ -1,0 +1,22 @@
+# @package _global_
+defaults:
+  - config
+  - _self_
+
+# Test sweep - just resnet18 vs resnet34
+# Total: 2 runs
+
+hydra:
+  mode: MULTIRUN  
+  sweep:
+    dir: outputs/test_sweep/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra:job.name}
+  sweeper:
+    params:
+      hydra.job.name: baseline,arch_18
+      model.architecture: resnet50,resnet18
+      model.embedding_dim: 64,64
+      training.lr: 3e-4,3e-4
+      
+experiment:
+  name: test_sweep
