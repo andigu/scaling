@@ -5,12 +5,13 @@ import sinter
 import numpy as np
 import json
 import pandas as pd
+import click
 
-def generate_example_tasks(d):
+def generate_example_tasks(d, p):
     for rounds in range(1,d+1):
         alg = Algorithm.build_memory(cycles=rounds)
         cf = CodeFactory(SurfaceCode, {'d': d})
-        noise_model = NoiseModel.get_scaled_noise_model(2.1).without_loss()
+        noise_model = NoiseModel.get_scaled_noise_model(p).without_loss()
         sim = StimSimulator(alg, noise_model, cf)
         dummy_circuit = sim.stim_circ
         data_indices = np.arange(d**2).reshape((d,d))
@@ -25,13 +26,15 @@ def generate_example_tasks(d):
             },
         )
 
-def main():
+@click.command()
+@click.argument('d', type=int)
+@click.argument('p', type=float)
+def main(d, p):
     # Collect the samples (takes a few minutes).
-    d = 9
     samples = sinter.collect(
         num_workers=multiprocessing.cpu_count()-1,
-        max_shots=10_000_00,
-        tasks=generate_example_tasks(d=d),
+        max_shots=100_000_00,
+        tasks=generate_example_tasks(d=d, p=p),
         decoders=['pymatching'],
         print_progress=True,
     )
@@ -41,7 +44,7 @@ def main():
         f.write(sinter.CSV_HEADER + '\n')
         for sample in samples:
             f.write(sample.to_csv_line() + '\n')
-    df = pd.read_csv("samples_d9.csv", skipinitialspace=True)
+    df = pd.read_csv(f"samples_d{d}.csv", skipinitialspace=True)
     rounds = [json.loads(x)['rounds'] for x in df["json_metadata"]]
     df['rounds'] = rounds
     df['error_rate'] = df['errors']/df['shots']

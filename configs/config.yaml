@@ -1,12 +1,12 @@
 defaults:
-  - experiment: baseline
   - _self_
+  - experiment: baseline
 
 # Dataset parameters (fixed, not swept)
 dataset:
-  d: 9                    # Surface code distance
-  p: 2.1                  # Error probability parameter
-  rounds_max: 9           # Maximum number of rounds
+  d: 19                     # Surface code distance
+  p: 2.1                   # Error probability parameter
+  rounds_max: 19            # Maximum number of rounds
 
 # Model architecture (main sweep targets)
 model:
@@ -20,7 +20,7 @@ training:
   lr: 3e-4               # Learning rate (main sweep target)
   max_steps: 50000       # Maximum training steps
   log_every_n_steps: 100 # Logging frequency
-  checkpoint_every_n_steps: 10000  # Checkpoint frequency
+  checkpoint_every_minutes: 15  # Checkpoint frequency in minutes
   precision: bf16-mixed  # Mixed precision training
 
 # Hardware/performance settings

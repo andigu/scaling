@@ -1,0 +1,13 @@
+# @package _global_
+
+model:
+  architecture: resnet101
+  embedding_dim: 64
+  stage3_stride: [2,2,2]
+  stage4_stride: [2,2,2]
+
+training:
+  lr: 3e-4
+
+experiment:
+  name: arch_101_downsample

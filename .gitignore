@@ -18,3 +18,4 @@ checkpoints/
 lightning_logs/
 logs/
 *.scale_batch_size_*
+wandb/

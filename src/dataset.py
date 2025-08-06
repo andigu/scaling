@@ -21,6 +21,18 @@ class EMA:
     
     def get(self):
         return self.value if self.value is not None else 0.0
+    
+    def state_dict(self):
+        """Return state dictionary for checkpointing."""
+        return {
+            'decay': self.decay,
+            'value': self.value
+        }
+    
+    def load_state_dict(self, state_dict):
+        """Load state from checkpoint."""
+        self.decay = state_dict['decay']
+        self.value = state_dict['value']
 
 
 class TemporalSurfaceCodeDataset(IterableDataset):

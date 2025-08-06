@@ -22,4 +22,6 @@ General phenomenon is that deep circuits train slower (they have a smaller slope
 
 doubling embedding dimension vs doubling depth: depth wins -- this is nice anyways, because the training memory cost is linear in depth and quadratic in embedding dimension
 
+revision: increasing model power (e.g., depth or width) only results in wins *if* we can keep the batch size large enough. Experiments on d~13 shows resnet101 beating resnet50, etc in terms of convergence rate, but both have batch sizes that are very large (~thousands). But on d~19, we start to get limited by memory and resnet50 with downsampling in later layers (much lower memory pressure) beats resnet50 with no downsampling and resnet101 -- this is because the batchsize is much larger. So when we scale architecture, we need to ensure the batch size keeps up, otherwise we won't get the wins from scaling architecture.
+
 Takeaway: decoding with larger distance is not really the hard problem. The hard problem is training with deeper circuits. Solution: use deeper networks. This of course makes inference (and training, but who cares about training) slower by a factor proportional to the depth, but maybe distillation can help.
