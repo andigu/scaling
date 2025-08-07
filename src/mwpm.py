@@ -7,9 +7,9 @@ import json
 import pandas as pd
 import click
 
-def generate_example_tasks(d, p):
-    for rounds in range(1,d+1):
-        alg = Algorithm.build_memory(cycles=rounds)
+def generate_example_tasks(d, rounds, p):
+    for r in range(1, rounds + 1):
+        alg = Algorithm.build_memory(cycles=r)
         cf = CodeFactory(SurfaceCode, {'d': d})
         noise_model = NoiseModel.get_scaled_noise_model(p).without_loss()
         sim = StimSimulator(alg, noise_model, cf)
@@ -22,19 +22,20 @@ def generate_example_tasks(d, p):
         yield sinter.Task(
             circuit=dummy_circuit,
             json_metadata={
-                'rounds': rounds
+                'rounds': r
             },
         )
 
 @click.command()
 @click.argument('d', type=int)
+@click.argument('rounds', type=int)
 @click.argument('p', type=float)
-def main(d, p):
+def main(d, rounds, p):
     # Collect the samples (takes a few minutes).
     samples = sinter.collect(
         num_workers=multiprocessing.cpu_count()-1,
-        max_shots=100_000_00,
-        tasks=generate_example_tasks(d=d, p=p),
+        max_shots=5_000_000,
+        tasks=generate_example_tasks(d=d, rounds=rounds, p=p),
         decoders=['pymatching'],
         print_progress=True,
     )

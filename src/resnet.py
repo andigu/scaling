@@ -16,7 +16,7 @@ class ResNet3D(nn.Module):
     }
     
     def __init__(self, layers=None, embedding_dim=128, architecture='resnet50', 
-                 stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):
+                 stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), use_lstm=False):
         """
         Args:
             layers: List of integers specifying blocks per stage [stage1, stage2, stage3, stage4]
@@ -49,7 +49,9 @@ class ResNet3D(nn.Module):
         # Channel reduction back to embedding_dim
         self.channel_reduce = nn.Conv3d(embedding_dim * 16, embedding_dim, kernel_size=1)
 
-        self.lstm = nn.LSTM(embedding_dim, embedding_dim, batch_first=True, num_layers=3, bidirectional=True)
+        self.use_lstm = use_lstm
+        if use_lstm:
+            self.lstm = nn.LSTM(embedding_dim, embedding_dim, batch_first=True)
         
         # Learnable spatial weighting and projection
         self.project = nn.Sequential(
@@ -60,11 +62,21 @@ class ResNet3D(nn.Module):
     
     def _make_stage(self, in_channels, out_channels, num_blocks, dilation=1, stride=(1, 1, 1)):
         blocks = []
-        # First block handles channel change and optional downsampling
-        blocks.append(self._make_bottleneck_block(in_channels, out_channels, dilation=dilation, downsample=True, stride=stride))
-        # Remaining blocks maintain channels with no downsampling
-        for _ in range(num_blocks - 1):
-            blocks.append(self._make_bottleneck_block(out_channels, out_channels, dilation=dilation))
+        # Determine block type based on architecture
+        use_bottleneck = self.architecture in ['resnet50', 'resnet101', 'resnet152']
+        
+        if use_bottleneck:
+            # First block handles channel change and optional downsampling
+            blocks.append(self._make_bottleneck_block(in_channels, out_channels, dilation=dilation, downsample=True, stride=stride))
+            # Remaining blocks maintain channels with no downsampling
+            for _ in range(num_blocks - 1):
+                blocks.append(self._make_bottleneck_block(out_channels, out_channels, dilation=dilation))
+        else:
+            # First block handles channel change and optional downsampling
+            blocks.append(self._make_basic_block(in_channels, out_channels, dilation=dilation, downsample=True, stride=stride))
+            # Remaining blocks maintain channels with no downsampling
+            for _ in range(num_blocks - 1):
+                blocks.append(self._make_basic_block(out_channels, out_channels, dilation=dilation))
         return nn.Sequential(*blocks)
     
     def _make_bottleneck_block(self, in_channels, out_channels, dilation=1, downsample=False, stride=(1, 1, 1)):
@@ -103,6 +115,33 @@ class ResNet3D(nn.Module):
             
         return BottleneckBlock(layers, skip)
     
+    def _make_basic_block(self, in_channels, out_channels, dilation=1, downsample=False, stride=(1, 1, 1)):
+        # ResNet18/34-style basic block: 3x3 -> 3x3
+        padding = dilation
+        conv_stride = stride if downsample else (1, 1, 1)
+        
+        layers = nn.Sequential(
+            # Pre-activation design
+            nn.BatchNorm3d(in_channels),
+            nn.GELU(),
+            # First 3x3 convolution with optional stride
+            nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=padding,
+                     dilation=dilation, stride=conv_stride),
+            nn.BatchNorm3d(out_channels),
+            nn.GELU(),
+            # Second 3x3 convolution
+            nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=padding,
+                     dilation=dilation)
+        )
+        
+        # Skip connection with optional dimension matching
+        if downsample or in_channels != out_channels:
+            skip = nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=conv_stride)
+        else:
+            skip = nn.Identity()
+            
+        return BottleneckBlock(layers, skip)
+    
     def forward(self, x):
         # Input: (batch, time, height, width)
         embedding = self.embedding(x)
@@ -116,9 +155,13 @@ class ResNet3D(nn.Module):
         
         # Reduce channels back to embedding_dim
         embedding = self.channel_reduce(embedding)  # 2048 -> 128
-        
-        # Final projection
-        return self.project(embedding.mean(dim=(-1,-2,-3)))  # (batch, time, 1)
+        if self.use_lstm:
+            embedding = embedding.mean(dim=(-1, -2))  # (batch, embedding_dim, time)
+            embedding = embedding.permute(0, 2, 1)  # (batch, time, embedding_dim)
+            out, _ = self.lstm(embedding)  # (batch, time, embedding_dim)
+            return self.project(out[:,-1,:])
+        else:
+            return self.project(embedding.mean(dim=(-1,-2,-3)))  # (batch, time, 1)
 
     @classmethod
     def resnet18(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):

@@ -1,12 +1,15 @@
 defaults:
   - _self_
   - experiment: baseline
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
 
 # Dataset parameters (fixed, not swept)
 dataset:
-  d: 19                     # Surface code distance
+  d: 9                     # Surface code distance
   p: 2.1                   # Error probability parameter
   rounds_max: 19            # Maximum number of rounds
+  mwpm_filter: false        # Enable/disable MWPM filtering
 
 # Model architecture (main sweep targets)
 model:
@@ -14,9 +17,11 @@ model:
   embedding_dim: 64      # Embedding dimension
   stage3_stride: [1,1,1]  # Stage 3 downsampling stride (T,H,W)
   stage4_stride: [1,1,1]  # Stage 4 downsampling stride (T,H,W)
+  use_lstm: false
 
 # Training parameters
 training:
+  batch_size: null       # Manual batch size override (null = auto-tune)
   lr: 3e-4               # Learning rate (main sweep target)
   max_steps: 50000       # Maximum training steps
   log_every_n_steps: 100 # Logging frequency
@@ -26,6 +31,10 @@ training:
 # Hardware/performance settings
 hardware:
   accelerator: auto      # Training accelerator
+  devices: auto          # Number of GPUs (auto, or specific number like 2, 4, etc.)
+  strategy: auto         # Training strategy (auto, ddp, ddp_find_unused_parameters_true, etc.)
+  num_nodes: 1           # Number of nodes (for future multi-node support)
+  sync_batchnorm: true   # Synchronize batch norm across GPUs
   num_workers: 8         # DataLoader workers
   prefetch_factor: 4     # DataLoader prefetch
   persistent_workers: true  # Keep workers alive
@@ -33,11 +42,11 @@ hardware:
 # Experiment settings
 experiment:
   name: resnet_experiment  # Experiment name for logging
-  save_dir: /n/netscratch/yelin_lab/Everyone/andigu/scaling/logs        # Directory for logs
-  checkpoint_dir: /n/netscratch/yelin_lab/Everyone/andigu/scaling/checkpoints  # Directory for checkpoints
+  base_dir: /n/netscratch/yelin_lab/Everyone/andigu/scaling  # Base directory for all experiment data
 
 # Weights & Biases settings
 wandb:
+  enabled: true             # Enable/disable wandb logging
   project: scaling  # W&B project name
   entity: null              # W&B entity (team), null uses default
   tags: [resnet, surface_code, decoder]  # Tags for organizing runs

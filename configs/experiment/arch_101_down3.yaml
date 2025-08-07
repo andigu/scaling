@@ -1,13 +1,13 @@
 # @package _global_
 
 model:
-  architecture: resnet50
+  architecture: resnet101
   embedding_dim: 64
-  stage3_stride: [1,1,1]
+  stage3_stride: [2,1,1]
   stage4_stride: [1,1,1]
 
 training:
-  lr: 3e-4
+  lr: 1e-3
 
 experiment:
-  name: baseline
+  name: arch_101_down3

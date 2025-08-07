@@ -27,4 +27,5 @@ dependencies = [
     "transformers>=4.53.3",
     "qiskit>=2.1.1",
     "hydra-submitit-launcher>=1.2.0",
+    "hydra-colorlog>=1.2.0",
 ]

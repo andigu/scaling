@@ -1,0 +1,561 @@
+[2025-08-06 19:24:24,345][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 19:24:24,346][__main__][INFO] - === STARTING EXPERIMENT: baseline-mwpm-filt ===
+[2025-08-06 19:24:24,346][__main__][INFO] - PID: 199550
+[2025-08-06 19:24:24,346][__main__][INFO] - SLURM_JOB_ID: 28947894
+[2025-08-06 19:24:24,346][__main__][INFO] - Architecture: resnet50
+[2025-08-06 19:24:24,346][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 19:24:24,346][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 19:24:24,346][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 19:24:24,346][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 19:24:24,346][__main__][INFO] - Dataset: d=9, rounds_max=19, p=2.1
+[2025-08-06 19:24:24,347][__main__][INFO] - Accelerator: auto
+[2025-08-06 19:24:24,347][__main__][INFO] - Devices: auto
+[2025-08-06 19:24:24,347][__main__][INFO] - Strategy: auto
+[2025-08-06 19:24:24,347][__main__][INFO] - Num Nodes: 1
+[2025-08-06 19:24:24,347][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 19:24:24,347][__main__][INFO] - MWPM filtering: True
+[2025-08-06 19:24:24,347][__main__][INFO] - Batch Size: 453
+[2025-08-06 19:24:24,347][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 19:24:24,347][__main__][INFO] - Max Steps: 50000
+[2025-08-06 19:24:24,347][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 19:24:24,348][__main__][INFO] - Log every 100 steps
+[2025-08-06 19:24:24,348][__main__][INFO] - Num Workers: 8
+[2025-08-06 19:24:24,348][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 19:24:24,348][__main__][INFO] - Persistent Workers: True
+[2025-08-06 19:24:24,348][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/baseline-mwpm-filt
+[2025-08-06 19:24:24,372][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 19:24:24,372][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 19:24:29,262][__main__][INFO] - Saved new W&B run ID to file: vie4qs1t
+[2025-08-06 19:24:29,390][__main__][INFO] - Using manual batch size from config: 453
+[2025-08-06 19:24:29,476][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 19:24:30,008][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:01:01,573][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:01:01,574][__main__][INFO] - === STARTING EXPERIMENT: baseline-d19-filter ===
+[2025-08-06 20:01:01,574][__main__][INFO] - PID: 2968524
+[2025-08-06 20:01:01,574][__main__][INFO] - SLURM_JOB_ID: 28958299
+[2025-08-06 20:01:01,574][__main__][INFO] - Architecture: resnet50
+[2025-08-06 20:01:01,574][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:01:01,574][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:01:01,574][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:01:01,574][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:01:01,574][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 20:01:01,574][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:01:01,574][__main__][INFO] - Devices: auto
+[2025-08-06 20:01:01,574][__main__][INFO] - Strategy: auto
+[2025-08-06 20:01:01,574][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:01:01,574][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:01:01,574][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:01:01,575][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:01:01,575][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:01:01,575][__main__][INFO] - Max Steps: 100000
+[2025-08-06 20:01:01,575][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:01:01,575][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:01:01,575][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:01:01,575][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:01:01,575][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:01:01,575][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/baseline-d19-filter
+[2025-08-06 20:01:01,597][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:01:01,597][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:01:03,981][__main__][INFO] - Saved new W&B run ID to file: cz9wl9tn
+[2025-08-06 20:01:04,061][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:01:04,450][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:03:04,658][__main__][INFO] - Saved batch size 236 to file
+[2025-08-06 20:03:04,659][__main__][INFO] - Optimal per-GPU batch size found: 236
+[2025-08-06 20:03:04,659][__main__][INFO] - Effective total batch size across 1 device(s): 236
+[2025-08-06 20:03:04,664][__main__][INFO] - Saved metadata: {'timestamp': 1754524984.659184, 'slurm_job_id': '28958299', 'batch_size': 236, 'num_devices': 1, 'effective_batch_size': 236}
+[2025-08-06 20:03:05,061][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 20:03:05,072][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:04:15,077][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:04:15,078][__main__][INFO] - === STARTING EXPERIMENT: resnet34-d19-filter ===
+[2025-08-06 20:04:15,078][__main__][INFO] - PID: 2970369
+[2025-08-06 20:04:15,078][__main__][INFO] - SLURM_JOB_ID: 28960126
+[2025-08-06 20:04:15,078][__main__][INFO] - Architecture: resnet34
+[2025-08-06 20:04:15,078][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:04:15,078][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:04:15,078][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:04:15,078][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:04:15,078][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 20:04:15,078][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:04:15,078][__main__][INFO] - Devices: auto
+[2025-08-06 20:04:15,078][__main__][INFO] - Strategy: auto
+[2025-08-06 20:04:15,078][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:04:15,078][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:04:15,078][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:04:15,078][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:04:15,078][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:04:15,079][__main__][INFO] - Max Steps: 100000
+[2025-08-06 20:04:15,079][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:04:15,079][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:04:15,079][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:04:15,079][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:04:15,079][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:04:15,079][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet34-d19-filter
+[2025-08-06 20:04:15,103][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:04:15,103][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:04:17,060][__main__][INFO] - Saved new W&B run ID to file: 3u88lg50
+[2025-08-06 20:04:17,136][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:04:17,726][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:06:17,240][__main__][INFO] - Saved batch size 236 to file
+[2025-08-06 20:06:17,243][__main__][INFO] - Optimal per-GPU batch size found: 236
+[2025-08-06 20:06:17,243][__main__][INFO] - Effective total batch size across 1 device(s): 236
+[2025-08-06 20:06:17,256][__main__][INFO] - Saved metadata: {'timestamp': 1754525177.2436533, 'slurm_job_id': '28960126', 'batch_size': 236, 'num_devices': 1, 'effective_batch_size': 236}
+[2025-08-06 20:06:17,690][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 20:06:17,697][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:11:24,208][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:11:24,208][__main__][INFO] - === STARTING EXPERIMENT: resnet34-d19-filter ===
+[2025-08-06 20:11:24,208][__main__][INFO] - PID: 2974407
+[2025-08-06 20:11:24,208][__main__][INFO] - SLURM_JOB_ID: 28960126
+[2025-08-06 20:11:24,208][__main__][INFO] - Architecture: resnet34
+[2025-08-06 20:11:24,209][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:11:24,209][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:11:24,209][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:11:24,209][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:11:24,209][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 20:11:24,209][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:11:24,209][__main__][INFO] - Devices: auto
+[2025-08-06 20:11:24,209][__main__][INFO] - Strategy: auto
+[2025-08-06 20:11:24,209][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:11:24,209][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:11:24,209][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:11:24,209][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:11:24,209][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:11:24,209][__main__][INFO] - Max Steps: 100000
+[2025-08-06 20:11:24,209][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:11:24,209][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:11:24,209][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:11:24,209][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:11:24,209][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:11:24,210][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet34-d19-filter
+[2025-08-06 20:11:24,229][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:11:24,229][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:11:26,027][__main__][INFO] - Saved new W&B run ID to file: cy6hxdgo
+[2025-08-06 20:11:26,958][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:11:27,565][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:34:50,374][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:34:50,376][__main__][INFO] - === STARTING EXPERIMENT: resnet50_filt_4gpu ===
+[2025-08-06 20:34:50,376][__main__][INFO] - PID: 757898
+[2025-08-06 20:34:50,376][__main__][INFO] - SLURM_JOB_ID: 28962560
+[2025-08-06 20:34:50,376][__main__][INFO] - Architecture: resnet50
+[2025-08-06 20:34:50,376][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:34:50,376][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:34:50,376][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:34:50,376][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:34:50,376][__main__][INFO] - Use LSTM: False
+[2025-08-06 20:34:50,377][__main__][INFO] - Dataset: d=9, rounds_max=19, p=2.1
+[2025-08-06 20:34:50,377][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:34:50,377][__main__][INFO] - Devices: auto
+[2025-08-06 20:34:50,377][__main__][INFO] - Strategy: auto
+[2025-08-06 20:34:50,377][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:34:50,377][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:34:50,377][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:34:50,377][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:34:50,377][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:34:50,377][__main__][INFO] - Max Steps: 50000
+[2025-08-06 20:34:50,377][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:34:50,377][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:34:50,378][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:34:50,378][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:34:50,378][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:34:50,378][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_filt_4gpu
+[2025-08-06 20:34:50,394][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:34:50,394][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:34:56,458][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:34:56,460][__main__][INFO] - === STARTING EXPERIMENT: resnet50_lstm ===
+[2025-08-06 20:34:56,460][__main__][INFO] - PID: 3897256
+[2025-08-06 20:34:56,460][__main__][INFO] - SLURM_JOB_ID: 28962562
+[2025-08-06 20:34:56,460][__main__][INFO] - Architecture: resnet50
+[2025-08-06 20:34:56,460][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:34:56,460][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:34:56,460][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:34:56,460][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:34:56,461][__main__][INFO] - Use LSTM: True
+[2025-08-06 20:34:56,461][__main__][INFO] - Dataset: d=9, rounds_max=19, p=2.1
+[2025-08-06 20:34:56,461][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:34:56,461][__main__][INFO] - Devices: auto
+[2025-08-06 20:34:56,461][__main__][INFO] - Strategy: auto
+[2025-08-06 20:34:56,461][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:34:56,461][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:34:56,461][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:34:56,461][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:34:56,461][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:34:56,461][__main__][INFO] - Max Steps: 50000
+[2025-08-06 20:34:56,462][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:34:56,462][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:34:56,462][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:34:56,462][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:34:56,462][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:34:56,462][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lstm
+[2025-08-06 20:34:56,478][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:34:56,478][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:34:58,807][__main__][INFO] - Saved new W&B run ID to file: 5frieun7
+[2025-08-06 20:34:58,941][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:35:02,071][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:36:32,973][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:36:32,974][__main__][INFO] - === STARTING EXPERIMENT: resnet101_filt_4gpu ===
+[2025-08-06 20:36:32,974][__main__][INFO] - PID: 3818023
+[2025-08-06 20:36:32,974][__main__][INFO] - SLURM_JOB_ID: 28962566
+[2025-08-06 20:36:32,974][__main__][INFO] - Architecture: resnet101
+[2025-08-06 20:36:32,974][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:36:32,974][__main__][INFO] - Learning Rate: 0.001
+[2025-08-06 20:36:32,974][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:36:32,974][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:36:32,974][__main__][INFO] - Use LSTM: False
+[2025-08-06 20:36:32,974][__main__][INFO] - Dataset: d=9, rounds_max=19, p=2.1
+[2025-08-06 20:36:32,975][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:36:32,975][__main__][INFO] - Devices: auto
+[2025-08-06 20:36:32,975][__main__][INFO] - Strategy: auto
+[2025-08-06 20:36:32,975][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:36:32,975][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:36:32,975][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:36:32,975][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:36:32,975][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:36:32,975][__main__][INFO] - Max Steps: 50000
+[2025-08-06 20:36:32,975][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:36:32,975][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:36:32,975][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:36:32,975][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:36:32,975][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:36:32,975][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet101_filt_4gpu
+[2025-08-06 20:36:32,991][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:36:32,991][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:36:35,104][__main__][INFO] - Saved new W&B run ID to file: mwv9malo
+[2025-08-06 20:36:35,231][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:36:38,030][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:37:03,392][__main__][INFO] - Found optimal batch size 1186
+[2025-08-06 20:37:03,410][__main__][INFO] - Saved batch size 948 to file
+[2025-08-06 20:37:03,410][__main__][INFO] - Optimal per-GPU batch size found: 948
+[2025-08-06 20:37:03,410][__main__][INFO] - Effective total batch size across 4 device(s): 3792
+[2025-08-06 20:37:03,417][__main__][INFO] - Saved metadata: {'timestamp': 1754527023.4107168, 'slurm_job_id': '28962560', 'batch_size': 948, 'num_devices': 4, 'effective_batch_size': 3792}
+[2025-08-06 20:37:03,877][__main__][INFO] - === STARTING TRAINING ===
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2025-08-06 20:38:01,766][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:38:39,304][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:41:39,461][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:41:39,462][__main__][INFO] - === STARTING EXPERIMENT: resnet50_filt_4gpu ===
+[2025-08-06 20:41:39,462][__main__][INFO] - PID: 762273
+[2025-08-06 20:41:39,462][__main__][INFO] - SLURM_JOB_ID: 28962710
+[2025-08-06 20:41:39,462][__main__][INFO] - Architecture: resnet50
+[2025-08-06 20:41:39,462][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:41:39,462][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:41:39,463][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:41:39,463][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:41:39,463][__main__][INFO] - Use LSTM: False
+[2025-08-06 20:41:39,463][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 20:41:39,463][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:41:39,463][__main__][INFO] - Devices: auto
+[2025-08-06 20:41:39,463][__main__][INFO] - Strategy: auto
+[2025-08-06 20:41:39,463][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:41:39,463][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:41:39,463][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:41:39,464][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:41:39,464][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:41:39,464][__main__][INFO] - Max Steps: 50000
+[2025-08-06 20:41:39,464][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:41:39,464][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:41:39,464][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:41:39,464][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:41:39,464][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:41:39,464][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_filt_4gpu
+[2025-08-06 20:41:39,477][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:41:39,477][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:41:41,675][__main__][INFO] - Saved new W&B run ID to file: xissoqhx
+[2025-08-06 20:41:41,800][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:41:44,710][__main__][INFO] - Set seed 42 for local rank 0
+:41:45,350][__main__][INFO] - SLURM_JOB_ID: 28962711
+[2025-08-06 20:41:45,350][__main__][INFO] - Architecture: resnet50
+[2025-08-06 20:41:45,350][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:41:45,350][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:41:45,350][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:41:45,351][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:41:45,351][__main__][INFO] - Use LSTM: True
+[2025-08-06 20:41:45,351][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 20:41:45,351][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:41:45,351][__main__][INFO] - Devices: auto
+[2025-08-06 20:41:45,351][__main__][INFO] - Strategy: auto
+[2025-08-06 20:41:45,351][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:41:45,351][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:41:45,351][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:41:45,351][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:41:45,352][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:41:45,352][__main__][INFO] - Max Steps: 50000
+[2025-08-06 20:41:45,352][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:41:45,352][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:41:45,352][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:41:45,352][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:41:45,352][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:41:45,352][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lstm
+[2025-08-06 20:41:45,374][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:41:45,374][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:41:47,618][__main__][INFO] - Saved new W&B run ID to file: mmyvoi9d
+[2025-08-06 20:41:47,742][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:41:50,646][__main__][INFO] - Set seed 42 for local rank 0
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     [2025-08-06 20:45:03,612][__main__][INFO] - Found optimal batch size 296
+[2025-08-06 20:45:03,629][__main__][INFO] - Saved batch size 236 to file
+[2025-08-06 20:45:03,629][__main__][INFO] - Optimal per-GPU batch size found: 236
+[2025-08-06 20:45:03,629][__main__][INFO] - Effective total batch size across 4 device(s): 944
+[2025-08-06 20:45:03,637][__main__][INFO] - Saved metadata: {'timestamp': 1754527503.6295946, 'slurm_job_id': '28962711', 'batch_size': 236, 'num_devices': 4, 'effective_batch_size': 944}
+[2025-08-06 20:45:04,080][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 20:45:59,971][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:46:34,357][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:46:34,358][__main__][INFO] - === STARTING EXPERIMENT: resnet50_lstm_1gpu ===
+[2025-08-06 20:46:34,358][__main__][INFO] - PID: 2084698
+[2025-08-06 20:46:34,358][__main__][INFO] - SLURM_JOB_ID: 28962839
+[2025-08-06 20:46:34,358][__main__][INFO] - Architecture: resnet50
+[2025-08-06 20:46:34,358][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 20:46:34,358][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 20:46:34,358][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 20:46:34,358][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 20:46:34,358][__main__][INFO] - Use LSTM: True
+[2025-08-06 20:46:34,358][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 20:46:34,358][__main__][INFO] - Accelerator: auto
+[2025-08-06 20:46:34,359][__main__][INFO] - Devices: auto
+[2025-08-06 20:46:34,359][__main__][INFO] - Strategy: auto
+[2025-08-06 20:46:34,359][__main__][INFO] - Num Nodes: 1
+[2025-08-06 20:46:34,359][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 20:46:34,359][__main__][INFO] - MWPM filtering: True
+[2025-08-06 20:46:34,359][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 20:46:34,359][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 20:46:34,359][__main__][INFO] - Max Steps: 50000
+[2025-08-06 20:46:34,359][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 20:46:34,359][__main__][INFO] - Log every 100 steps
+[2025-08-06 20:46:34,359][__main__][INFO] - Num Workers: 15
+[2025-08-06 20:46:34,359][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 20:46:34,359][__main__][INFO] - Persistent Workers: True
+[2025-08-06 20:46:34,360][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lstm_1gpu
+[2025-08-06 20:46:34,378][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 20:46:34,378][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 20:46:36,454][__main__][INFO] - Saved new W&B run ID to file: xgqhejsy
+[2025-08-06 20:46:36,566][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 20:46:37,377][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 20:49:43,461][__main__][INFO] - Found optimal batch size 296
+[2025-08-06 20:49:43,475][__main__][INFO] - Saved batch size 236 to file
+[2025-08-06 20:49:43,476][__main__][INFO] - Optimal per-GPU batch size found: 236
+[2025-08-06 20:49:43,476][__main__][INFO] - Effective total batch size across 1 device(s): 236
+[2025-08-06 20:49:43,482][__main__][INFO] - Saved metadata: {'timestamp': 1754527783.476463, 'slurm_job_id': '28962839', 'batch_size': 236, 'num_devices': 1, 'effective_batch_size': 236}
+[2025-08-06 20:49:43,940][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 20:49:43,957][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:10:17,827][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:10:17,828][__main__][INFO] - === STARTING EXPERIMENT: resnet101_filt_4gpu ===
+[2025-08-06 21:10:17,828][__main__][INFO] - PID: 301137
+[2025-08-06 21:10:17,828][__main__][INFO] - SLURM_JOB_ID: 28962714
+[2025-08-06 21:10:17,828][__main__][INFO] - Architecture: resnet101
+[2025-08-06 21:10:17,828][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:10:17,828][__main__][INFO] - Learning Rate: 0.001
+[2025-08-06 21:10:17,828][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:10:17,828][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:10:17,828][__main__][INFO] - Use LSTM: False
+[2025-08-06 21:10:17,829][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 21:10:17,829][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:10:17,829][__main__][INFO] - Devices: auto
+[2025-08-06 21:10:17,829][__main__][INFO] - Strategy: auto
+[2025-08-06 21:10:17,829][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:10:17,829][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:10:17,829][__main__][INFO] - MWPM filtering: True
+[2025-08-06 21:10:17,829][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 21:10:17,829][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:10:17,829][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:10:17,829][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:10:17,829][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:10:17,829][__main__][INFO] - Num Workers: 15
+[2025-08-06 21:10:17,829][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:10:17,829][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:10:17,829][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet101_filt_4gpu
+[2025-08-06 21:10:17,849][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 21:10:17,849][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 21:10:20,963][__main__][INFO] - Saved new W&B run ID to file: wqqx9gan
+[2025-08-06 21:10:21,089][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+=
+[2025-08-06 21:10:20,552][__main__][INFO] - PID: 2020253
+[2025-08-06 21:10:20,552][__main__][INFO] - SLURM_JOB_ID: 28964162
+[2025-08-06 21:10:20,552][__main__][INFO] - Architecture: resnet50
+[2025-08-06 21:10:20,552][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:10:20,552][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 21:10:20,552][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:10:20,553][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:10:20,553][__main__][INFO] - Use LSTM: False
+[2025-08-06 21:10:20,553][__main__][INFO] - Dataset: d=19, rounds_max=19, p=1.0
+[2025-08-06 21:10:20,553][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:10:20,553][__main__][INFO] - Devices: auto
+[2025-08-06 21:10:20,553][__main__][INFO] - Strategy: auto
+[2025-08-06 21:10:20,553][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:10:20,553][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:10:20,553][__main__][INFO] - MWPM filtering: False
+[2025-08-06 21:10:20,553][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 21:10:20,553][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:10:20,553][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:10:20,554][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:10:20,554][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:10:20,554][__main__][INFO] - Num Workers: 15
+[2025-08-06 21:10:20,554][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:10:20,554][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:10:20,554][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lowp
+[2025-08-06 21:10:20,565][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-06 21:10:20,565][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 21:10:25,150][__main__][INFO] - Saved new W&B run ID to file: xpmg2cnz
+[2025-08-06 21:10:25,324][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 21:10:26,296][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:11:58,903][__main__][INFO] - Found optimal batch size 296
+[2025-08-06 21:11:58,912][__main__][INFO] - Saved batch size 236 to file
+[2025-08-06 21:11:58,913][__main__][INFO] - Optimal per-GPU batch size found: 236
+[2025-08-06 21:11:58,913][__main__][INFO] - Effective total batch size across 1 device(s): 236
+[2025-08-06 21:11:58,919][__main__][INFO] - Saved metadata: {'timestamp': 1754529118.9132912, 'slurm_job_id': '28964162', 'batch_size': 236, 'num_devices': 1, 'effective_batch_size': 236}
+[2025-08-06 21:11:59,350][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 21:11:59,365][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:14:59,650][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:14:59,652][__main__][INFO] - === STARTING EXPERIMENT: resnet101_filt_4gpu ===
+[2025-08-06 21:14:59,652][__main__][INFO] - PID: 2133471
+[2025-08-06 21:14:59,652][__main__][INFO] - SLURM_JOB_ID: 28962714
+[2025-08-06 21:14:59,652][__main__][INFO] - Architecture: resnet101
+[2025-08-06 21:14:59,652][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:14:59,652][__main__][INFO] - Learning Rate: 0.001
+[2025-08-06 21:14:59,652][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:14:59,652][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:14:59,652][__main__][INFO] - Use LSTM: False
+[2025-08-06 21:14:59,652][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 21:14:59,652][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:14:59,652][__main__][INFO] - Devices: auto
+[2025-08-06 21:14:59,652][__main__][INFO] - Strategy: auto
+[2025-08-06 21:14:59,652][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:14:59,652][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:14:59,653][__main__][INFO] - MWPM filtering: True
+[2025-08-06 21:14:59,653][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 21:14:59,653][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:14:59,653][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:14:59,653][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:14:59,653][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:14:59,653][__main__][INFO] - Num Workers: 15
+[2025-08-06 21:14:59,653][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:14:59,653][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:14:59,653][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet101_filt_4gpu
+[2025-08-06 21:14:59,674][__main__][INFO] - Loaded W&B run ID from file: wqqx9gan
+[2025-08-06 21:14:59,674][__main__][INFO] - Setting up W&B logger with existing run ID: wqqx9gan
+[2025-08-06 21:14:59,674][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 21:14:59,849][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 21:15:02,689][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:15:57,575][__main__][INFO] - === TRAINING COMPLETED SUCCESSFULLY ===
+[2025-08-06 21:22:11,189][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:22:11,190][__main__][INFO] - === STARTING EXPERIMENT: resnet101_filt_4gpu ===
+[2025-08-06 21:22:11,190][__main__][INFO] - PID: 555437
+[2025-08-06 21:22:11,190][__main__][INFO] - SLURM_JOB_ID: 28962714
+[2025-08-06 21:22:11,190][__main__][INFO] - Architecture: resnet101
+[2025-08-06 21:22:11,190][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:22:11,190][__main__][INFO] - Learning Rate: 0.001
+[2025-08-06 21:22:11,190][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:22:11,190][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:22:11,190][__main__][INFO] - Use LSTM: False
+[2025-08-06 21:22:11,191][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 21:22:11,191][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:22:11,191][__main__][INFO] - Devices: auto
+[2025-08-06 21:22:11,191][__main__][INFO] - Strategy: auto
+[2025-08-06 21:22:11,191][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:22:11,191][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:22:11,191][__main__][INFO] - MWPM filtering: True
+[2025-08-06 21:22:11,191][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 21:22:11,191][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:22:11,191][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:22:11,191][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:22:11,191][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:22:11,191][__main__][INFO] - Num Workers: 15
+[2025-08-06 21:22:11,191][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:22:11,191][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:22:11,191][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet101_filt_4gpu
+[2025-08-06 21:22:11,209][__main__][INFO] - Loaded W&B run ID from file: wqqx9gan
+[2025-08-06 21:22:11,209][__main__][INFO] - Setting up W&B logger with existing run ID: wqqx9gan
+[2025-08-06 21:22:11,209][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 21:22:11,339][__main__][INFO] - === AUTO-TUNING BATCH SIZE ===
+[2025-08-06 21:22:14,125][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:27:59,501][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:27:59,502][__main__][INFO] - === STARTING EXPERIMENT: resnet50_lstm_1gpu ===
+[2025-08-06 21:27:59,502][__main__][INFO] - PID: 2560904
+[2025-08-06 21:27:59,502][__main__][INFO] - SLURM_JOB_ID: 28962839
+[2025-08-06 21:27:59,502][__main__][INFO] - Architecture: resnet50
+[2025-08-06 21:27:59,502][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:27:59,502][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 21:27:59,502][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:27:59,502][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:27:59,502][__main__][INFO] - Use LSTM: True
+[2025-08-06 21:27:59,502][__main__][INFO] - Dataset: d=19, rounds_max=19, p=2.1
+[2025-08-06 21:27:59,502][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:27:59,502][__main__][INFO] - Devices: auto
+[2025-08-06 21:27:59,502][__main__][INFO] - Strategy: auto
+[2025-08-06 21:27:59,502][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:27:59,502][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:27:59,502][__main__][INFO] - MWPM filtering: True
+[2025-08-06 21:27:59,502][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 21:27:59,502][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:27:59,502][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:27:59,503][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:27:59,503][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:27:59,503][__main__][INFO] - Num Workers: 15
+[2025-08-06 21:27:59,503][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:27:59,503][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:27:59,503][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lstm_1gpu
+[2025-08-06 21:27:59,502][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:27:59,503][__main__][INFO] - === STARTING EXPERIMENT: resnet50_lowp ===
+[2025-08-06 21:27:59,503][__main__][INFO] - PID: 2560905
+[2025-08-06 21:27:59,503][__main__][INFO] - SLURM_JOB_ID: 28964162
+[2025-08-06 21:27:59,503][__main__][INFO] - Architecture: resnet50
+[2025-08-06 21:27:59,503][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:27:59,503][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-06 21:27:59,503][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:27:59,504][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:27:59,504][__main__][INFO] - Use LSTM: False
+[2025-08-06 21:27:59,504][__main__][INFO] - Dataset: d=19, rounds_max=19, p=1.0
+[2025-08-06 21:27:59,504][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:27:59,504][__main__][INFO] - Devices: auto
+[2025-08-06 21:27:59,504][__main__][INFO] - Strategy: auto
+[2025-08-06 21:27:59,504][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:27:59,504][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:27:59,504][__main__][INFO] - MWPM filtering: False
+[2025-08-06 21:27:59,504][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-06 21:27:59,504][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:27:59,504][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:27:59,504][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:27:59,504][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:27:59,504][__main__][INFO] - Num Workers: 15
+[2025-08-06 21:27:59,504][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:27:59,504][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:27:59,504][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lowp
+[2025-08-06 21:27:59,525][__main__][INFO] - Loaded W&B run ID from file: xpmg2cnz
+[2025-08-06 21:27:59,525][__main__][INFO] - Setting up W&B logger with existing run ID: xpmg2cnz
+[2025-08-06 21:27:59,526][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 21:27:59,528][__main__][INFO] - Found latest checkpoint: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lstm_1gpu/checkpoints/resnet50_lstm_1gpu-7504-0.4707.ckpt
+[2025-08-06 21:27:59,531][__main__][INFO] - Loaded W&B run ID from file: xgqhejsy
+[2025-08-06 21:27:59,531][__main__][INFO] - Setting up W&B logger with existing run ID: xgqhejsy
+[2025-08-06 21:27:59,531][__main__][INFO] - Initializing wandb logger with params
+[2025-08-06 21:27:59,656][__main__][INFO] - Loaded batch size 236 from file
+[2025-08-06 21:27:59,659][__main__][INFO] - Loaded batch size 236 from file
+[2025-08-06 21:27:59,763][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 21:27:59,763][__main__][INFO] - Resuming from checkpoint: /n/netscratch/yelin_lab/Everyone/andigu/scaling/resnet50_lstm_1gpu/checkpoints/resnet50_lstm_1gpu-7504-0.4707.ckpt
+[2025-08-06 21:27:59,764][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 21:28:04,010][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:28:04,010][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:50:35,687][__main__][INFO] - Set seed 42 for local rank 0
+[2025-08-06 21:50:35,687][__main__][INFO] - === STARTING EXPERIMENT: d7-extrap ===
+[2025-08-06 21:50:35,687][__main__][INFO] - PID: 1661508
+[2025-08-06 21:50:35,687][__main__][INFO] - SLURM_JOB_ID: 28965458
+[2025-08-06 21:50:35,687][__main__][INFO] - Architecture: resnet50
+[2025-08-06 21:50:35,687][__main__][INFO] - Embedding Dim: 64
+[2025-08-06 21:50:35,687][__main__][INFO] - Learning Rate: 0.001
+[2025-08-06 21:50:35,688][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-06 21:50:35,688][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-06 21:50:35,688][__main__][INFO] - Use LSTM: False
+[2025-08-06 21:50:35,688][__main__][INFO] - Dataset: d=7, rounds_max=7, p=1.0
+[2025-08-06 21:50:35,688][__main__][INFO] - Accelerator: auto
+[2025-08-06 21:50:35,688][__main__][INFO] - Devices: auto
+[2025-08-06 21:50:35,688][__main__][INFO] - Strategy: auto
+[2025-08-06 21:50:35,688][__main__][INFO] - Num Nodes: 1
+[2025-08-06 21:50:35,688][__main__][INFO] - Sync BatchNorm: True
+[2025-08-06 21:50:35,688][__main__][INFO] - MWPM filtering: False
+[2025-08-06 21:50:35,688][__main__][INFO] - Batch Size: 512
+[2025-08-06 21:50:35,688][__main__][INFO] - Precision: bf16-mixed
+[2025-08-06 21:50:35,688][__main__][INFO] - Max Steps: 50000
+[2025-08-06 21:50:35,689][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-06 21:50:35,689][__main__][INFO] - Log every 100 steps
+[2025-08-06 21:50:35,689][__main__][INFO] - Num Workers: 11
+[2025-08-06 21:50:35,689][__main__][INFO] - Prefetch Factor: 4
+[2025-08-06 21:50:35,689][__main__][INFO] - Persistent Workers: True
+[2025-08-06 21:50:35,689][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/d7-extrap
+[2025-08-06 21:50:35,708][__main__][INFO] - W&B logging disabled in config
+[2025-08-06 21:50:35,798][__main__][INFO] - Using manual batch size from config: 512
+[2025-08-06 21:50:35,886][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-06 21:50:35,903][__main__][INFO] - Set seed 42 for local rank 0
