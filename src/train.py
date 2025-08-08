@@ -27,7 +27,9 @@ import hydra
 import random
 
 from resnet import ResNet3D
-from dataset import TemporalSurfaceCodeDataset, EMA
+from stage_manager import StageManager, CurriculumConfig
+from data_module import SurfaceCodeDataModule
+from dataset import EMA
 
 # Setup logging
 log = logging.getLogger(__name__)
@@ -37,27 +39,6 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.set_float32_matmul_precision('medium')
 
-
-def set_seed(base_seed: int = 42, local_rank: int = 0):
-    """Set seeds for reproducibility with different seeds per GPU.
-    
-    Args:
-        base_seed: Base seed for reproducibility
-        local_rank: Local rank of the current process (0 for single GPU)
-    """
-    # Create different seeds per GPU while maintaining reproducibility
-    seed = base_seed + local_rank
-    
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    
-    if torch.cuda.is_available():
-        # Each GPU gets its own seed
-        torch.cuda.manual_seed(seed)
-    
-    log.info(f"Set seed {seed} for local rank {local_rank}")
-    
 class ExperimentState:
     """Manages experiment state for resuming after preemption."""
     
@@ -67,6 +48,7 @@ class ExperimentState:
         self.checkpoints_dir = experiment_dir / "checkpoints"
         self.logs_dir = experiment_dir / "logs"
         self.wandb_dir = experiment_dir / "wandb"
+        self.wandb_run_id_file = experiment_dir / "wandb_run_id.txt"
         
         # Create directories
         self.experiment_dir.mkdir(parents=True, exist_ok=True)
@@ -96,6 +78,21 @@ class ExperimentState:
             return metadata
         return {}
     
+    def save_wandb_run_id(self, run_id: str):
+        """Save W&B run ID for resuming."""
+        with open(self.wandb_run_id_file, 'w') as f:
+            f.write(run_id)
+        log.info(f"Saved W&B run ID: {run_id}")
+    
+    def load_wandb_run_id(self) -> str:
+        """Load W&B run ID for resuming."""
+        if self.wandb_run_id_file.exists():
+            with open(self.wandb_run_id_file, 'r') as f:
+                run_id = f.read().strip()
+            log.info(f"Found existing W&B run ID: {run_id}")
+            return run_id
+        return None
+    
     def find_latest_checkpoint(self, experiment_name: str) -> str:
         """Find the most recent checkpoint file."""
         checkpoints = list(self.checkpoints_dir.glob(f"{experiment_name}-*.ckpt"))
@@ -111,25 +108,37 @@ class ExperimentState:
 
 
 class ResNet3DTrainer(L.LightningModule):
-    def __init__(self, cfg: DictConfig, batch_size: int = 2):
+    def __init__(self, cfg: DictConfig):
         super().__init__()
         
-        self.batch_size = batch_size
         self.cfg = cfg
         self.lr = cfg.training.lr
+        
+        # Initialize curriculum learning if enabled
+        curriculum_config = CurriculumConfig(
+            enabled=cfg.curriculum.enabled,
+            stage1_p=cfg.curriculum.stage1_p,
+            stage1_steps=cfg.curriculum.stage1_steps,
+            stage2_p_end=cfg.curriculum.stage2_p_end,
+            stage2_steps=cfg.curriculum.stage2_steps,
+            stage3_steps=cfg.curriculum.stage3_steps
+        )
+        self.stage_manager = StageManager(curriculum_config) if curriculum_config.enabled else None
         
         # Create model
         self.model = ResNet3D(
             architecture=cfg.model.architecture,
             embedding_dim=cfg.model.embedding_dim,
+            channel_multipliers=cfg.model.get('channel_multipliers', None),
             stage3_stride=tuple(cfg.model.stage3_stride),
             stage4_stride=tuple(cfg.model.stage4_stride),
-            use_lstm=cfg.model.get('use_lstm', False)
+            use_lstm=cfg.model.get('use_lstm', False),
+            chunking=cfg.dataset.get('chunking', (1, 1, 1))
         )
         self.reset_metrics()
     
     def setup(self, stage: str) -> None:
-        """Called when trainer initializes. Set per-GPU seeds here."""
+        """Called when trainer initializes. Set per-GPU seeds and handle resume."""
         if stage == "fit":
             # Get local rank (0 for single GPU, 0,1,2,... for multi-GPU)
             local_rank = 0
@@ -138,8 +147,9 @@ class ResNet3DTrainer(L.LightningModule):
             elif hasattr(self.trainer, 'strategy') and hasattr(self.trainer.strategy, 'local_rank'):
                 local_rank = self.trainer.strategy.local_rank
             
-            # Set different seed for each GPU
-            set_seed(base_seed=42, local_rank=local_rank)
+            # Update DataModule global step offset if we resumed from checkpoint
+            if hasattr(self, '_resume_global_step') and hasattr(self.trainer, 'datamodule'):
+                self.trainer.datamodule.update_global_step_offset(self._resume_global_step)
         
     def reset_metrics(self):
         self.loss_ema = EMA(0.995)
@@ -149,24 +159,31 @@ class ResNet3DTrainer(L.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
-        t = x.shape[1]-2
+        x, y, (t, p_err) = batch
         pred = self(x)
         loss = F.binary_cross_entropy_with_logits(pred, y)
         
+        # Check for stage transitions and log if needed
+        stage_prefix = ""
+        if self.stage_manager is not None:
+            transition = self.stage_manager.check_stage_transition(self.global_step)
+            stage_prefix = self.stage_manager.get_stage_prefix(self.global_step)
+            
         # Track metrics (only on main process in multi-GPU)
         if self.trainer.is_global_zero:
             loss_item = loss.item()
             inacc = ((pred > 0) != y).float().mean().item()
             
             self.loss_ema.update(loss_item)
-            self.inacc_ema[t].update(inacc)
+            self.inacc_ema[t-1].update(inacc)
         
-        # Log metrics (Lightning handles multi-GPU synchronization)
-        self.log('loss_ema', self.loss_ema.get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
+        # Log metrics with stage prefix (Lightning handles multi-GPU synchronization)
+        self.log(f'{stage_prefix}loss_ema', self.loss_ema.get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
         if batch_idx > 150:
             for t2 in range(len(self.inacc_ema)):
-                self.log(f'inacc_{t2}', self.inacc_ema[t2].get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
+                self.log(f'{stage_prefix}inacc_{t2}', self.inacc_ema[t2].get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
+        if self.stage_manager is not None:
+            self.log(f'curriculum_p', p_err, on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
         return loss
     
     def configure_optimizers(self):
@@ -175,20 +192,25 @@ class ResNet3DTrainer(L.LightningModule):
         return optimizer
     
     def state_dict(self):
-        """Override to include EMA states in checkpoints."""
+        """Override to include EMA states and stage manager state in checkpoints."""
         state = super().state_dict()
         
-        # Add EMA states and batch size
+        # Add EMA states
         state['loss_ema'] = self.loss_ema.state_dict()
         state['inacc_ema'] = [ema.state_dict() for ema in self.inacc_ema]
+        
+        # Add stage manager state for curriculum learning
+        if self.stage_manager is not None:
+            state['stage_manager'] = self.stage_manager.state_dict()
         
         return state
     
     def load_state_dict(self, state_dict, strict=True):
-        """Override to restore EMA states from checkpoints."""
-        # Extract EMA states and batch size before calling super()
+        """Override to restore EMA states and stage manager state from checkpoints."""
+        # Extract EMA states and stage manager state before calling super()
         loss_ema_state = state_dict.pop('loss_ema', None)
         inacc_ema_states = state_dict.pop('inacc_ema', None)
+        stage_manager_state = state_dict.pop('stage_manager', None)
         
         # Load the rest normally
         result = super().load_state_dict(state_dict, strict)
@@ -202,45 +224,19 @@ class ResNet3DTrainer(L.LightningModule):
                 if i < len(self.inacc_ema):
                     self.inacc_ema[i].load_state_dict(ema_state)
         
+        # Restore stage manager state if available
+        if stage_manager_state is not None and self.stage_manager is not None:
+            self.stage_manager.load_state_dict(stage_manager_state)
+        
         return result
     
-    def train_dataloader(self):
-        # Get local rank for multi-GPU seed diversity
-        local_rank = 0
-        if hasattr(self.trainer, 'local_rank'):
-            local_rank = self.trainer.local_rank
-        elif hasattr(self.trainer, 'strategy') and hasattr(self.trainer.strategy, 'local_rank'):
-            local_rank = self.trainer.strategy.local_rank
+    def on_load_checkpoint(self, checkpoint):
+        """Called when loading checkpoint - notify trainer about resume."""
+        super().on_load_checkpoint(checkpoint)
         
-        dataset = TemporalSurfaceCodeDataset(
-            d=self.cfg.dataset.d,
-            rounds_max=self.cfg.dataset.rounds_max,
-            p=self.cfg.dataset.p,
-            batch_size=self.batch_size,
-            mwpm_filter=self.cfg.dataset.mwpm_filter
-        )
-        
-        # Create a worker init function that incorporates local rank
-        def worker_init_fn(worker_id):
-            # CRITICAL: Combine base seed (42), local rank, and worker_id for unique seeds per worker per GPU
-            # This ensures GPU0/Worker0, GPU0/Worker1, GPU1/Worker0, GPU1/Worker1 all have different seeds
-            worker_seed = 42 + local_rank * 1000 + worker_id
-            
-            # Set all random number generators
-            np.random.seed(worker_seed)
-            random.seed(worker_seed)
-            torch.manual_seed(worker_seed)
-            
-        return DataLoader(
-            dataset, 
-            batch_size=None, 
-            shuffle=False, 
-            num_workers=self.cfg.hardware.num_workers,
-            pin_memory=True, 
-            prefetch_factor=self.cfg.hardware.prefetch_factor,
-            persistent_workers=self.cfg.hardware.persistent_workers,
-            worker_init_fn=worker_init_fn
-        )
+        # Store the global step for DataModule update
+        self._resume_global_step = checkpoint.get('global_step', 0)
+        log.info(f"Model loaded from checkpoint at global step {self._resume_global_step}")
 
 
 
@@ -259,9 +255,22 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, run_i
             'experiment_name': cfg.experiment.name,
             'architecture': cfg.model.architecture,
             'embedding_dim': cfg.model.embedding_dim,
+            'channel_multipliers': cfg.model.get('channel_multipliers', [2, 4, 8, 16]),
             'lr': cfg.training.lr,
+            'gradient_clip_val': cfg.training.get('gradient_clip_val', None),
+            'gradient_clip_algorithm': cfg.training.get('gradient_clip_algorithm', 'norm'),
             'stage3_stride': cfg.model.stage3_stride,
             'stage4_stride': cfg.model.stage4_stride,
+            'dataset_d': cfg.dataset.d,
+            'dataset_rounds_max': cfg.dataset.rounds_max,
+            'dataset_p': cfg.dataset.p,
+            'curriculum_enabled': cfg.curriculum.enabled,
+            'curriculum_stage1_p': cfg.curriculum.stage1_p if cfg.curriculum.enabled else None,
+            'curriculum_stage1_steps': cfg.curriculum.stage1_steps if cfg.curriculum.enabled else None,
+            'curriculum_stage2_p_start': cfg.curriculum.stage1_p if cfg.curriculum.enabled else None,
+            'curriculum_stage2_p_end': cfg.curriculum.stage2_p_end if cfg.curriculum.enabled else None,
+            'curriculum_stage2_steps': cfg.curriculum.stage2_steps if cfg.curriculum.enabled else None,
+            'curriculum_stage3_steps': cfg.curriculum.stage3_steps if cfg.curriculum.enabled else None,
         }
     }
     
@@ -286,8 +295,6 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, run_i
 def train_experiment(cfg: DictConfig):
     """Main training function for a single experiment."""
     
-    # Set initial seed for main process (per-GPU seeds will be set in Lightning's setup method)
-    set_seed(42, local_rank=0)
     
     log.info(f"=== STARTING EXPERIMENT: {cfg.experiment.name} ===")
     log.info(f"PID: {os.getpid()}")
@@ -295,10 +302,25 @@ def train_experiment(cfg: DictConfig):
     log.info(f"Architecture: {cfg.model.architecture}")
     log.info(f"Embedding Dim: {cfg.model.embedding_dim}")
     log.info(f"Learning Rate: {cfg.training.lr}")
+    log.info(f"Gradient Clip Val: {cfg.training.get('gradient_clip_val', None)}")
+    log.info(f"Gradient Clip Algorithm: {cfg.training.get('gradient_clip_algorithm', 'norm')}")
+    log.info(f"Channel Multipliers: {cfg.model.get('channel_multipliers', [2, 4, 8, 16])}")
     log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")
     log.info(f"Stage4 Stride: {cfg.model.stage4_stride}")
     log.info(f"Use LSTM: {cfg.model.use_lstm}")
+    log.info(f"Chunking: {cfg.dataset.chunking}")
     log.info(f"Dataset: d={cfg.dataset.d}, rounds_max={cfg.dataset.rounds_max}, p={cfg.dataset.p}")
+    
+    # Log curriculum learning configuration
+    if cfg.curriculum.enabled:
+        log.info("=== 3-STAGE CURRICULUM LEARNING ENABLED ===")
+        log.info(f"Stage 1: p={cfg.curriculum.stage1_p} for {cfg.curriculum.stage1_steps} steps")
+        log.info(f"Stage 2: p={cfg.curriculum.stage1_p}→{cfg.curriculum.stage2_p_end} over {cfg.curriculum.stage2_steps} steps")  
+        log.info(f"Stage 3: p={cfg.curriculum.stage2_p_end} for {cfg.curriculum.stage3_steps} steps")
+        total_curriculum_steps = cfg.curriculum.stage1_steps + cfg.curriculum.stage2_steps + cfg.curriculum.stage3_steps
+        log.info(f"Total curriculum steps: {total_curriculum_steps}")
+    else:
+        log.info("Standard training (no curriculum)")
     
     # Log multi-GPU configuration
     log.info(f"Accelerator: {cfg.hardware.accelerator}")
@@ -310,7 +332,16 @@ def train_experiment(cfg: DictConfig):
     log.info(f"MWPM filtering: {cfg.dataset.mwpm_filter}")
     log.info(f"Batch Size: {cfg.training.batch_size if cfg.training.batch_size else 'auto-tuned'}")
     log.info(f"Precision: {cfg.training.precision}")
-    log.info(f"Max Steps: {cfg.training.max_steps}")
+    
+    # Determine effective max_steps (curriculum overrides if enabled)
+    effective_max_steps = cfg.training.max_steps
+    if cfg.curriculum.enabled:
+        curriculum_total_steps = cfg.curriculum.stage1_steps + cfg.curriculum.stage2_steps + cfg.curriculum.stage3_steps  
+        effective_max_steps = curriculum_total_steps
+        log.info(f"Max Steps: {effective_max_steps} (curriculum override)")
+    else:
+        log.info(f"Max Steps: {effective_max_steps}")
+        
     log.info(f"Checkpoint every {cfg.training.checkpoint_every_minutes} minutes")
     log.info(f"Log every {cfg.training.log_every_n_steps} steps")
     log.info(f"Num Workers: {cfg.hardware.num_workers}")
@@ -390,21 +421,21 @@ def train_experiment(cfg: DictConfig):
             num_devices = torch.cuda.device_count()
     
     # Handle batch size - manual override or auto-tuning
+    batch_size = None
     if cfg.training.batch_size is not None:
         # Manual batch size specified in config
-        model.batch_size = cfg.training.batch_size
-        log.info(f"Using manual batch size from config: {model.batch_size}")
+        batch_size = cfg.training.batch_size
+        log.info(f"Using manual batch size from config: {batch_size}")
     else:
         # Auto-tune batch size with file sharing for multi-GPU
         batch_size_file = experiment_dir / "batch_size.txt"
         
         # Check if batch size file exists (from previous tuning)
         if batch_size_file.exists():
-            saved_batch_size = int(batch_size_file.read_text().strip())
-            model.batch_size = saved_batch_size
-            log.info(f"Loaded batch size {model.batch_size} from file")
-        elif resume_checkpoint is None:
-            # Only tune batch size if not resuming and no saved batch size
+            batch_size = int(batch_size_file.read_text().strip())
+            log.info(f"Loaded batch size {batch_size} from file")
+        else:
+            # Auto-tune batch size if no saved batch size exists
             log.info("=== AUTO-TUNING BATCH SIZE ===")
             tuning_trainer = L.Trainer(
                 accelerator=cfg.hardware.accelerator,
@@ -412,22 +443,25 @@ def train_experiment(cfg: DictConfig):
                 precision=cfg.training.precision,
             )
             tuner = Tuner(tuning_trainer)
-            tuner.scale_batch_size(model, mode="binsearch", steps_per_trial=10)
-            log.info("Found optimal batch size " + str(model.batch_size))
-            model.batch_size = math.floor(model.batch_size * 0.8)
+            temp_data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=2)
+            tuner.scale_batch_size(model, datamodule=temp_data_module, mode="binsearch", steps_per_trial=10)
+            log.info("Found optimal batch size " + str(temp_data_module.batch_size))
             model.reset_metrics()
             
-            # Save batch size for other ranks
-            batch_size_file.write_text(str(model.batch_size))
-            log.info(f"Saved batch size {model.batch_size} to file")
+            # Use tuned batch size
+            batch_size = math.floor(temp_data_module.batch_size * 0.85)
             
-            effective_batch_size = model.batch_size * num_devices
-            log.info(f"Optimal per-GPU batch size found: {model.batch_size}")
+            # Save batch size for other ranks
+            batch_size_file.write_text(str(batch_size))
+            log.info(f"Saved batch size {batch_size} to file")
+            
+            effective_batch_size = batch_size * num_devices
+            log.info(f"Optimal per-GPU batch size found: {batch_size}")
             log.info(f"Effective total batch size across {num_devices} device(s): {effective_batch_size}")
             
             # Save metadata
             experiment_state.save_metadata(
-                batch_size=model.batch_size,
+                batch_size=batch_size,
                 num_devices=num_devices,
                 effective_batch_size=effective_batch_size
             )
@@ -435,19 +469,21 @@ def train_experiment(cfg: DictConfig):
             # Log to W&B if enabled
             if wandb_logger:
                 wandb_logger.log_hyperparams({
-                    "auto_tuned_batch_size": model.batch_size,
+                    "auto_tuned_batch_size": batch_size,
                     "num_devices": num_devices,
                     "effective_batch_size": effective_batch_size
                 })
-        else:
-            log.info(f"=== RESUMING FROM CHECKPOINT: {resume_checkpoint} ===")
-            effective_batch_size = model.batch_size * num_devices
-            if wandb_logger:
-                wandb_logger.log_hyperparams({
-                    "resumed_batch_size": model.batch_size,
-                    "num_devices": num_devices,
-                    "effective_batch_size": effective_batch_size
-                })
+    if wandb_logger:
+        wandb_logger.watch(model.model, log="all")
+    
+    # Create data module with finalized batch size
+    data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=batch_size)
+    
+    # Handle resume - update DataModule global step offset if resuming
+    if resume_checkpoint:
+        # We need to get the global step from the checkpoint
+        # For now we'll handle this in the fit() call, but we could also load it here
+        log.info("DataModule will be updated with resume step during checkpoint loading")
         
     # Create trainer (this spawns other ranks in multi-GPU mode)
     trainer = L.Trainer(
@@ -457,9 +493,11 @@ def train_experiment(cfg: DictConfig):
         num_nodes=cfg.hardware.num_nodes,
         sync_batchnorm=cfg.hardware.sync_batchnorm,
         precision=cfg.training.precision,
+        gradient_clip_val=cfg.training.get('gradient_clip_val', None),
+        gradient_clip_algorithm=cfg.training.get('gradient_clip_algorithm', 'norm'),
         logger=[csv_logger] + ([wandb_logger] if wandb_logger else []),
         callbacks=[checkpoint_callback],
-        max_steps=cfg.training.max_steps,
+        max_steps=effective_max_steps,
         log_every_n_steps=cfg.training.log_every_n_steps
     )
         
@@ -469,7 +507,7 @@ def train_experiment(cfg: DictConfig):
         log.info(f"Resuming from checkpoint: {resume_checkpoint}")
     
     try:
-        trainer.fit(model=model, ckpt_path=resume_checkpoint)
+        trainer.fit(model=model, datamodule=data_module, ckpt_path=resume_checkpoint)
         log.info("=== TRAINING COMPLETED SUCCESSFULLY ===")
     except KeyboardInterrupt:
         log.info("=== TRAINING INTERRUPTED ===")
@@ -481,9 +519,9 @@ def train_experiment(cfg: DictConfig):
         final_checkpoint = checkpoint_callback.last_model_path
         if final_checkpoint:
             experiment_state.save_metadata(
-                batch_size=model.batch_size,
+                batch_size=data_module.batch_size,
                 final_checkpoint=final_checkpoint,
-                status='completed' if trainer.global_step >= cfg.training.max_steps else 'interrupted'
+                status='completed' if trainer.global_step >= effective_max_steps else 'interrupted'
             )
         
         # Finish W&B run if enabled

@@ -10,11 +10,16 @@ dataset:
   p: 2.1                   # Error probability parameter
   rounds_max: 19            # Maximum number of rounds
   mwpm_filter: false        # Enable/disable MWPM filtering
+  chunking: [1,1,1]        # Chunk by time, x, and y dimension
 
 # Model architecture (main sweep targets)
 model:
   architecture: resnet50   # resnet18/resnet34/resnet50/resnet101/resnet152
   embedding_dim: 64      # Embedding dimension
+  channel_multipliers: [2, 4, 8, 16]  # Channel expansion per stage [stage1, stage2, stage3, stage4]
+                                       # [2,4,8,16] = standard ResNet (default)
+                                       # [1,1,1,1] = constant channels (memory efficient)
+                                       # [1,1.5,2,2.5] = gradual growth
   stage3_stride: [1,1,1]  # Stage 3 downsampling stride (T,H,W)
   stage4_stride: [1,1,1]  # Stage 4 downsampling stride (T,H,W)
   use_lstm: false
@@ -27,6 +32,8 @@ training:
   log_every_n_steps: 100 # Logging frequency
   checkpoint_every_minutes: 15  # Checkpoint frequency in minutes
   precision: bf16-mixed  # Mixed precision training
+  gradient_clip_val: 1.0 # Gradient clipping value (null = no clipping)
+  gradient_clip_algorithm: norm  # Gradient clipping algorithm: norm or value
 
 # Hardware/performance settings
 hardware:
@@ -43,6 +50,16 @@ hardware:
 experiment:
   name: resnet_experiment  # Experiment name for logging
   base_dir: /n/netscratch/yelin_lab/Everyone/andigu/scaling  # Base directory for all experiment data
+
+# 3-stage curriculum learning settings
+curriculum:
+  enabled: false            # Enable 3-stage curriculum learning
+  stage1_p: 0.5             # Low noise level for stage 1
+  stage1_steps: 25000       # Steps in stage 1
+  stage2_p_end: 2.1         # Target p for curriculum (stage 2 starts from stage1_p)
+  stage2_steps: 25000       # Steps for curriculum annealing
+  stage3_steps: 25000       # Steps at high noise (final training)
+  # Total training = stage1_steps + stage2_steps + stage3_steps = 75000 steps
 
 # Weights & Biases settings
 wandb:

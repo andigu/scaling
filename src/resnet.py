@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import numpy as np
 
 class ResNet3D(nn.Module):
     """Unified 3D ResNet implementation with configurable architecture."""
@@ -16,7 +16,8 @@ class ResNet3D(nn.Module):
     }
     
     def __init__(self, layers=None, embedding_dim=128, architecture='resnet50', 
-                 stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), use_lstm=False):
+                 stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), use_lstm=False, chunking=(1,1,1),
+                 channel_multipliers=None):
         """
         Args:
             layers: List of integers specifying blocks per stage [stage1, stage2, stage3, stage4]
@@ -24,9 +25,14 @@ class ResNet3D(nn.Module):
             architecture: String key for predefined architectures ('resnet18', 'resnet34', etc.)
             stage3_stride: 3-tuple (T, H, W) stride for stage 3 downsampling
             stage4_stride: 3-tuple (T, H, W) stride for stage 4 downsampling
+            use_lstm: Whether to use LSTM for temporal processing
+            chunking: Whether input data is chunked (affects embedding vocabulary size)
+            channel_multipliers: List of 4 multipliers for channel expansion [stage1, stage2, stage3, stage4]
+                               Defaults to [2, 4, 8, 16] for standard ResNet behavior
         """
         super().__init__()
         self.embedding_dim = embedding_dim
+        self.chunking = chunking
         
         # Use provided layers or lookup from architecture
         if layers is None:
@@ -37,17 +43,34 @@ class ResNet3D(nn.Module):
         self.layers = layers
         self.architecture = architecture
         
-        # Embedding layer for detector states (0, 1, 2)
-        self.embedding = nn.Embedding(81, embedding_dim)
+        # Set channel multipliers (default to standard ResNet expansion)
+        if channel_multipliers is None:
+            channel_multipliers = [2, 4, 8, 16]
         
-        # Build stages with specified block counts
-        self.stage1 = self._make_stage(embedding_dim, embedding_dim * 2, layers[0], dilation=1)
-        self.stage2 = self._make_stage(embedding_dim * 2, embedding_dim * 4, layers[1], dilation=1)
-        self.stage3 = self._make_stage(embedding_dim * 4, embedding_dim * 8, layers[2], dilation=1, stride=stage3_stride)
-        self.stage4 = self._make_stage(embedding_dim * 8, embedding_dim * 16, layers[3], dilation=1, stride=stage4_stride)
+        if len(channel_multipliers) != 4:
+            raise ValueError(f"channel_multipliers must have exactly 4 values, got {len(channel_multipliers)}")
         
-        # Channel reduction back to embedding_dim
-        self.channel_reduce = nn.Conv3d(embedding_dim * 16, embedding_dim, kernel_size=1)
+        # Round to nearest even number for optimal GPU performance
+        def round_to_even(x):
+            return max(2, int(2 * round(x / 2)))
+        
+        # Calculate actual channel counts
+        stage_channels = [round_to_even(embedding_dim * m) for m in channel_multipliers]
+        self.stage_channels = stage_channels
+        self.channel_multipliers = channel_multipliers
+        
+        # Embedding layer for detector states
+        # Although the number of embeddings may be big, a lot of them are inactive with chunking. It's closer to 2**np.prod(chunking) - the 3 accounts for boundaries
+        self.embedding = nn.Embedding(int(3**np.prod(chunking)), embedding_dim, padding_idx=0)
+        
+        # Build stages with calculated channel counts
+        self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0], dilation=1)
+        self.stage2 = self._make_stage(stage_channels[0], stage_channels[1], layers[1], dilation=1)
+        self.stage3 = self._make_stage(stage_channels[1], stage_channels[2], layers[2], dilation=1, stride=stage3_stride)
+        self.stage4 = self._make_stage(stage_channels[2], stage_channels[3], layers[3], dilation=1, stride=stage4_stride)
+        
+        # Channel reduction back to embedding_dim from final stage
+        self.channel_reduce = nn.Conv3d(stage_channels[3], embedding_dim, kernel_size=1)
 
         self.use_lstm = use_lstm
         if use_lstm:
@@ -164,34 +187,39 @@ class ResNet3D(nn.Module):
             return self.project(embedding.mean(dim=(-1,-2,-3)))  # (batch, time, 1)
 
     @classmethod
-    def resnet18(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):
+    def resnet18(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
         """Create ResNet18 variant."""
         return cls(architecture='resnet18', embedding_dim=embedding_dim, 
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride)
-    
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
+                  channel_multipliers=channel_multipliers)
+
     @classmethod
-    def resnet34(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):
+    def resnet34(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
         """Create ResNet34 variant."""
         return cls(architecture='resnet34', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride)
-    
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
+                  channel_multipliers=channel_multipliers)
+
     @classmethod
-    def resnet50(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):
+    def resnet50(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
         """Create ResNet50 variant."""
         return cls(architecture='resnet50', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
+                  channel_multipliers=channel_multipliers)
     
     @classmethod
-    def resnet101(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):
+    def resnet101(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
         """Create ResNet101 variant."""
         return cls(architecture='resnet101', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride)
-    
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
+                  channel_multipliers=channel_multipliers)
+
     @classmethod
-    def resnet152(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1)):
+    def resnet152(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
         """Create ResNet152 variant."""
         return cls(architecture='resnet152', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
+                  channel_multipliers=channel_multipliers)
 
 
 class BottleneckBlock(nn.Module):

@@ -51,7 +51,7 @@ def main(d, rounds, p):
     df['error_rate'] = df['errors']/df['shots']
     df['std_error_rate'] = np.sqrt(df['error_rate']*(1-df['error_rate'])/df['shots'])
     df = df.sort_values(by='rounds')
-    df.to_csv(f'samples_d{d}.csv', index=False)
+    df.to_csv(f'samples_d{d}-lowp.csv', index=False)
     
 if __name__ == "__main__":
     main()
