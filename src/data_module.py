@@ -7,6 +7,7 @@ worker initialization, and curriculum learning resume support.
 """
 
 import logging
+import os
 import random
 import numpy as np
 import torch
@@ -78,16 +79,36 @@ class SurfaceCodeDataModule(L.LightningDataModule):
         
         def worker_init_fn(worker_id):
             """Initialize each worker with unique, reproducible seeds."""
-            # CRITICAL: Combine base seed (42), local rank, worker_id, and global step offset
-            # This ensures unique seeds per worker per GPU while maintaining reproducibility
-            worker_seed = 42 + local_rank * 50 + worker_id + self.global_step_offset
+            # Calculate global rank for multi-node support
+            # global_rank = node_rank * devices_per_node + local_rank
+            node_rank = int(os.environ.get('SLURM_NODEID', os.environ.get('NODE_RANK', 0)))
+            
+            # Get devices per node - use detected num_devices or config
+            devices_per_node = 4  # Safe fallback: assume 4 GPUs per node (common case)
+            if hasattr(self.trainer, 'num_devices'):
+                devices_per_node = self.trainer.num_devices
+            elif hasattr(self.trainer, 'strategy') and hasattr(self.trainer.strategy, 'num_processes_per_node'):
+                devices_per_node = self.trainer.strategy.num_processes_per_node
+            # Try to get from config as backup
+            elif hasattr(self.cfg, 'hardware') and hasattr(self.cfg.hardware, 'devices'):
+                try:
+                    devices_per_node = int(self.cfg.hardware.devices) if self.cfg.hardware.devices != "auto" else 4
+                except (ValueError, TypeError):
+                    devices_per_node = 4
+                
+            global_rank = node_rank * devices_per_node + local_rank
+            
+            # CRITICAL: Use global rank to ensure unique seeds across all nodes and GPUs
+            # Formula: base_seed + global_rank * worker_multiplier + worker_id + global_step_offset
+            worker_multiplier = 20  # Safety margin for max workers per GPU
+            worker_seed = 42 + global_rank * worker_multiplier + worker_id + self.global_step_offset
             
             # Set all random number generators
             np.random.seed(worker_seed)
             random.seed(worker_seed)
             torch.manual_seed(worker_seed)
             
-            log.debug(f"Worker {worker_id} (rank {local_rank}) initialized with seed {worker_seed}")
+            log.debug(f"Worker {worker_id} (node {node_rank}, local_rank {local_rank}, global_rank {global_rank}) initialized with seed {worker_seed}")
         
         return DataLoader(
             self.train_dataset,

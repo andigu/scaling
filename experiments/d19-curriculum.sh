@@ -2,7 +2,9 @@
 #SBATCH --job-name=d19-curriculum
 #SBATCH --partition=gpu_requeue
 #SBATCH --constraint="h100"
-#SBATCH --cpus-per-gpu=16
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=16
 #SBATCH --gres=gpu:4
 #SBATCH --mem=48G
 #SBATCH --time=24:00:00
@@ -19,8 +21,8 @@ echo "Job ID: $SLURM_JOB_ID"
 echo "Experiment: d19-curriculum"
 echo "Purpose: Full-scale 3-stage curriculum learning pipeline"
 echo "Distance: 19 (production scale)"
-echo "GPUs: 4x H100"
-echo "Workers: 16 per GPU (64 total)"
+echo "GPUs: 8x H100 (2 nodes × 4 GPUs)"
+echo "Workers: 16 per GPU (128 total)"
 echo "Duration: ~24 hours for 500k steps"
 echo ""
 
@@ -33,10 +35,21 @@ cd /n/home07/andigu/scale
 source .venv/bin/activate
 export PYTHONPATH=/n/home07/andigu/scale/src:$PYTHONPATH
 
+# Setup multi-node distributed environment variables for PyTorch Lightning
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_PORT=12355
+# Lightning expects these specific environment variables
+export NODE_RANK=$SLURM_NODEID
+export WORLD_SIZE=$((SLURM_NNODES * SLURM_NTASKS_PER_NODE))
+
 echo "=== Environment Setup Complete ==="
 echo "Python path: $PYTHONPATH"
 echo "Working directory: $(pwd)"
 echo "Available GPUs: $(nvidia-smi --list-gpus | wc -l)"
+echo "Master Address: $MASTER_ADDR"
+echo "Master Port: $MASTER_PORT"
+echo "World Size: $WORLD_SIZE"
+echo "Node Rank: $NODE_RANK"
 echo ""
 
 # Run 3-stage curriculum learning with production parameters
@@ -46,14 +59,14 @@ echo "Stage 2: p=0.5→2.1 over 200,000 steps (curriculum ramp)"
 echo "Stage 3: p=2.1 for 100,000 steps (target noise, final convergence)"
 echo "Total: 500,000 steps (~20-24 hours)"
 echo ""
-echo "Multi-GPU Configuration:"
-echo "- 4x H100 GPUs with DDP"
-echo "- 16 workers per GPU (64 total DataLoader workers)"
-echo "- Synchronized batch normalization"
+echo "Multi-Node Configuration:"
+echo "- 2 nodes × 4 H100 GPUs = 8x H100 total"
+echo "- 16 workers per GPU (128 total DataLoader workers)"
+echo "- Synchronized batch normalization across nodes"
 echo "- Auto-tuned batch size per GPU"
 echo ""
 
-python src/train.py \
+srun python src/train.py \
     experiment=baseline \
     dataset.d=19 \
     dataset.rounds_max=19 \
@@ -62,7 +75,7 @@ python src/train.py \
     model.architecture=resnet50 \
     model.embedding_dim=128 \
     model.channel_multipliers=[2,2.5,3,3.5] \
-    training.lr=1e-4 \
+    training.lr=2e-4 \
     training.batch_size=null \
     training.log_every_n_steps=100 \
     training.checkpoint_every_minutes=15 \
@@ -71,22 +84,22 @@ python src/train.py \
     training.gradient_clip_algorithm=norm \
     hardware.accelerator=auto \
     hardware.devices=4 \
-    hardware.strategy=auto \
-    hardware.num_nodes=1 \
+    hardware.strategy=ddp \
+    hardware.num_nodes=2 \
     hardware.sync_batchnorm=true \
     hardware.num_workers=16 \
     hardware.prefetch_factor=4 \
     hardware.persistent_workers=true \
     curriculum.enabled=true \
     curriculum.stage1_p=0.5 \
-    curriculum.stage1_steps=200000 \
+    curriculum.stage1_steps=150000 \
     curriculum.stage2_p_end=2.1 \
     curriculum.stage2_steps=200000 \
-    curriculum.stage3_steps=100000 \
+    curriculum.stage3_steps=50000 \
     experiment.name=d19-curriculum \
     wandb.enabled=true \
     wandb.project=scaling \
-    wandb.tags=[curriculum,d19]
+    hardware.strategy=ddp
 
 echo ""
 echo "=== Large-Scale Curriculum Learning Complete ==="
@@ -95,10 +108,10 @@ echo ""
 echo "=== Validation Checklist ==="
 echo "1. Check logs for stage transitions at steps ~200k and ~400k"
 echo "2. Verify W&B shows smooth curriculum_p progression: 0.5→2.1"
-echo "3. Monitor multi-GPU synchronization and batch size consistency"
+echo "3. Monitor multi-node/multi-GPU synchronization and batch size consistency"
 echo "4. Confirm checkpoints capture curriculum state correctly"
 echo "5. Validate loss/accuracy trends across all three stages"
-echo "6. Check for any DDP hanging or worker timeout issues"
+echo "6. Check for any multi-node DDP hanging or worker timeout issues"
 echo ""
 echo "Expected Timeline:"
 echo "- Stage 1 (0-200k steps): ~10 hours"

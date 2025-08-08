@@ -34,13 +34,14 @@ training:
   precision: bf16-mixed  # Mixed precision training
   gradient_clip_val: 1.0 # Gradient clipping value (null = no clipping)
   gradient_clip_algorithm: norm  # Gradient clipping algorithm: norm or value
+  accumulate_grad_batches: 1  # Gradient accumulation batches (1 = no accumulation)
 
 # Hardware/performance settings
 hardware:
   accelerator: auto      # Training accelerator
   devices: auto          # Number of GPUs (auto, or specific number like 2, 4, etc.)
   strategy: auto         # Training strategy (auto, ddp, ddp_find_unused_parameters_true, etc.)
-  num_nodes: 1           # Number of nodes (for future multi-node support)
+  num_nodes: 1           # Number of nodes for multi-node training
   sync_batchnorm: true   # Synchronize batch norm across GPUs
   num_workers: 8         # DataLoader workers
   prefetch_factor: 4     # DataLoader prefetch

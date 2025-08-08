@@ -241,7 +241,7 @@ class ResNet3DTrainer(L.LightningModule):
 
 
 
-def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, run_id: str = None):
+def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, num_devices: int = 1, run_id: str = None):
     """Setup W&B logger with optional pre-existing run ID."""
     
     run_name = f"{cfg.experiment.name}_{cfg.model.architecture}_embed{cfg.model.embedding_dim}_lr{cfg.training.lr}"
@@ -259,6 +259,9 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, run_i
             'lr': cfg.training.lr,
             'gradient_clip_val': cfg.training.get('gradient_clip_val', None),
             'gradient_clip_algorithm': cfg.training.get('gradient_clip_algorithm', 'norm'),
+            'accumulate_grad_batches': cfg.training.accumulate_grad_batches,
+            'num_nodes': cfg.hardware.num_nodes,
+            'total_devices': cfg.hardware.num_nodes * num_devices,
             'stage3_stride': cfg.model.stage3_stride,
             'stage4_stride': cfg.model.stage4_stride,
             'dataset_d': cfg.dataset.d,
@@ -299,11 +302,22 @@ def train_experiment(cfg: DictConfig):
     log.info(f"=== STARTING EXPERIMENT: {cfg.experiment.name} ===")
     log.info(f"PID: {os.getpid()}")
     log.info(f"SLURM_JOB_ID: {os.environ.get('SLURM_JOB_ID', 'unknown')}")
+    
+    # Log multi-node environment variables for debugging
+    log.info(f"NODE_RANK: {os.environ.get('NODE_RANK', 'unknown')}")
+    log.info(f"WORLD_SIZE: {os.environ.get('WORLD_SIZE', 'unknown')}")
+    log.info(f"MASTER_ADDR: {os.environ.get('MASTER_ADDR', 'unknown')}")
+    log.info(f"MASTER_PORT: {os.environ.get('MASTER_PORT', 'unknown')}")
+    log.info(f"SLURM_NODEID: {os.environ.get('SLURM_NODEID', 'unknown')}")
+    log.info(f"SLURM_NNODES: {os.environ.get('SLURM_NNODES', 'unknown')}")
+    log.info(f"SLURM_NODELIST: {os.environ.get('SLURM_NODELIST', 'unknown')}")
+    
     log.info(f"Architecture: {cfg.model.architecture}")
     log.info(f"Embedding Dim: {cfg.model.embedding_dim}")
     log.info(f"Learning Rate: {cfg.training.lr}")
     log.info(f"Gradient Clip Val: {cfg.training.get('gradient_clip_val', None)}")
     log.info(f"Gradient Clip Algorithm: {cfg.training.get('gradient_clip_algorithm', 'norm')}")
+    log.info(f"Accumulate Grad Batches: {cfg.training.accumulate_grad_batches}")
     log.info(f"Channel Multipliers: {cfg.model.get('channel_multipliers', [2, 4, 8, 16])}")
     log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")
     log.info(f"Stage4 Stride: {cfg.model.stage4_stride}")
@@ -322,11 +336,23 @@ def train_experiment(cfg: DictConfig):
     else:
         log.info("Standard training (no curriculum)")
     
-    # Log multi-GPU configuration
+    # Get number of devices for logging
+    num_devices = 1
+    if cfg.hardware.devices != "auto":
+        try:
+            num_devices = int(cfg.hardware.devices)
+        except (ValueError, TypeError):
+            num_devices = 1
+    elif cfg.hardware.devices == "auto":
+        if torch.cuda.is_available():
+            num_devices = torch.cuda.device_count()
+    
+    # Log multi-node/multi-GPU configuration
     log.info(f"Accelerator: {cfg.hardware.accelerator}")
-    log.info(f"Devices: {cfg.hardware.devices}")
-    log.info(f"Strategy: {cfg.hardware.strategy}")
+    log.info(f"Devices per node: {cfg.hardware.devices}")
     log.info(f"Num Nodes: {cfg.hardware.num_nodes}")
+    log.info(f"Total Devices: {num_devices * cfg.hardware.num_nodes}")
+    log.info(f"Strategy: {cfg.hardware.strategy}")
     log.info(f"Sync BatchNorm: {cfg.hardware.sync_batchnorm}")
 
     log.info(f"MWPM filtering: {cfg.dataset.mwpm_filter}")
@@ -369,15 +395,18 @@ def train_experiment(cfg: DictConfig):
             log.info(f"Loaded W&B run ID from file: {wandb_run_id}")
         
         # Setup early W&B logger to get run ID
-        wandb_logger = setup_wandb_logger(cfg, experiment_state, run_id=wandb_run_id)
+        wandb_logger = setup_wandb_logger(cfg, experiment_state, num_devices, run_id=wandb_run_id)
         
         # If this is a new run, save the W&B run ID for other ranks/restarts
-        if wandb_run_id is None:
-            # Extract the actual run ID that W&B assigned
+        # Only rank 0 should manage the W&B run ID file
+        if wandb_run_id is None and int(os.environ.get('SLURM_PROCID', 0)) == 0:
+            # Extract the actual run ID that W&B assigned (only available on rank 0)
             actual_run_id = wandb_logger.experiment.id
             wandb_run_id_file.write_text(actual_run_id)
             wandb_run_id = actual_run_id
             log.info(f"Saved new W&B run ID to file: {actual_run_id}")
+        elif wandb_run_id is None:
+            log.info("Non-rank-0 process: W&B run ID will be managed by rank 0")
     else:
         log.info("W&B logging disabled in config")
     
@@ -409,23 +438,23 @@ def train_experiment(cfg: DictConfig):
         auto_insert_metric_name=False
     )
     
-    # Get number of devices for logging (needed for both fresh start and resume)
-    num_devices = 1
-    if cfg.hardware.devices != "auto":
-        try:
-            num_devices = int(cfg.hardware.devices)
-        except (ValueError, TypeError):
-            num_devices = 1
-    elif cfg.hardware.devices == "auto":
-        if torch.cuda.is_available():
-            num_devices = torch.cuda.device_count()
+    # num_devices already calculated above for logging
     
     # Handle batch size - manual override or auto-tuning
     batch_size = None
     if cfg.training.batch_size is not None:
         # Manual batch size specified in config
         batch_size = cfg.training.batch_size
+        effective_batch_size = batch_size * num_devices * cfg.hardware.num_nodes * cfg.training.accumulate_grad_batches
         log.info(f"Using manual batch size from config: {batch_size}")
+        log.info(f"Effective total batch size across {num_devices} device(s) on {cfg.hardware.num_nodes} node(s) with {cfg.training.accumulate_grad_batches} accumulation steps: {effective_batch_size}")
+        
+        # Save metadata for manual batch size
+        experiment_state.save_metadata(
+            batch_size=batch_size,
+            num_devices=num_devices,
+            effective_batch_size=effective_batch_size
+        )
     else:
         # Auto-tune batch size with file sharing for multi-GPU
         batch_size_file = experiment_dir / "batch_size.txt"
@@ -433,48 +462,97 @@ def train_experiment(cfg: DictConfig):
         # Check if batch size file exists (from previous tuning)
         if batch_size_file.exists():
             batch_size = int(batch_size_file.read_text().strip())
+            effective_batch_size = batch_size * num_devices * cfg.hardware.num_nodes * cfg.training.accumulate_grad_batches
             log.info(f"Loaded batch size {batch_size} from file")
-        else:
-            # Auto-tune batch size if no saved batch size exists
-            log.info("=== AUTO-TUNING BATCH SIZE ===")
-            tuning_trainer = L.Trainer(
-                accelerator=cfg.hardware.accelerator,
-                devices=1,  # Always use single GPU for batch size tuning
-                precision=cfg.training.precision,
-            )
-            tuner = Tuner(tuning_trainer)
-            temp_data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=2)
-            tuner.scale_batch_size(model, datamodule=temp_data_module, mode="binsearch", steps_per_trial=10)
-            log.info("Found optimal batch size " + str(temp_data_module.batch_size))
-            model.reset_metrics()
+            log.info(f"Effective total batch size across {num_devices} device(s) on {cfg.hardware.num_nodes} node(s) with {cfg.training.accumulate_grad_batches} accumulation steps: {effective_batch_size}")
             
-            # Use tuned batch size
-            batch_size = math.floor(temp_data_module.batch_size * 0.85)
-            
-            # Save batch size for other ranks
-            batch_size_file.write_text(str(batch_size))
-            log.info(f"Saved batch size {batch_size} to file")
-            
-            effective_batch_size = batch_size * num_devices
-            log.info(f"Optimal per-GPU batch size found: {batch_size}")
-            log.info(f"Effective total batch size across {num_devices} device(s): {effective_batch_size}")
-            
-            # Save metadata
+            # Save metadata for loaded batch size
             experiment_state.save_metadata(
                 batch_size=batch_size,
                 num_devices=num_devices,
                 effective_batch_size=effective_batch_size
             )
+        else:
+            # Only rank 0 (global rank 0) should do batch size auto-tuning
+            is_rank_0 = int(os.environ.get('SLURM_PROCID', 0)) == 0
             
-            # Log to W&B if enabled
-            if wandb_logger:
-                wandb_logger.log_hyperparams({
-                    "auto_tuned_batch_size": batch_size,
-                    "num_devices": num_devices,
-                    "effective_batch_size": effective_batch_size
-                })
+            if is_rank_0:
+                # Auto-tune batch size on rank 0 only
+                log.info("=== AUTO-TUNING BATCH SIZE (RANK 0) ===")
+                tuning_trainer = L.Trainer(
+                    accelerator=cfg.hardware.accelerator,
+                    devices=1,  # Always use single GPU for batch size tuning
+                    precision=cfg.training.precision,
+                )
+                tuner = Tuner(tuning_trainer)
+                temp_data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=2)
+                tuner.scale_batch_size(model, datamodule=temp_data_module, mode="binsearch", steps_per_trial=10)
+                log.info("Found optimal batch size " + str(temp_data_module.batch_size))
+                model.reset_metrics()
+                
+                # Use tuned batch size
+                batch_size = math.floor(temp_data_module.batch_size * 0.85)
+                
+                # Save batch size for other ranks
+                batch_size_file.write_text(str(batch_size))
+                log.info(f"Saved batch size {batch_size} to file")
+                
+                effective_batch_size = batch_size * num_devices * cfg.hardware.num_nodes * cfg.training.accumulate_grad_batches
+                log.info(f"Optimal per-GPU batch size found: {batch_size}")
+                log.info(f"Effective total batch size across {num_devices} device(s) on {cfg.hardware.num_nodes} node(s) with {cfg.training.accumulate_grad_batches} accumulation steps: {effective_batch_size}")
+                
+                # Save metadata
+                experiment_state.save_metadata(
+                    batch_size=batch_size,
+                    num_devices=num_devices,
+                    effective_batch_size=effective_batch_size
+                )
+                
+                # Log to W&B if enabled
+                if wandb_logger:
+                    wandb_logger.log_hyperparams({
+                        "auto_tuned_batch_size": batch_size,
+                        "num_devices": num_devices,
+                        "effective_batch_size": effective_batch_size
+                    })
+            else:
+                # Other ranks wait for batch size file to be created by rank 0
+                log.info("=== WAITING FOR BATCH SIZE FROM RANK 0 ===")
+                import time
+                wait_timeout = 600  # 10 minutes
+                wait_start = time.time()
+                
+                while not batch_size_file.exists():
+                    if time.time() - wait_start > wait_timeout:
+                        raise RuntimeError(f"Timeout: Batch size file not created by rank 0 after {wait_timeout} seconds")
+                    
+                    log.info(f"Waiting for batch size file... ({int(time.time() - wait_start)}s elapsed)")
+                    time.sleep(10)  # Check every 10 seconds
+                
+                # Load the batch size that rank 0 found
+                batch_size = int(batch_size_file.read_text().strip())
+                effective_batch_size = batch_size * num_devices * cfg.hardware.num_nodes * cfg.training.accumulate_grad_batches
+                log.info(f"Loaded batch size {batch_size} from rank 0")
+                log.info(f"Effective total batch size across {num_devices} device(s) on {cfg.hardware.num_nodes} node(s) with {cfg.training.accumulate_grad_batches} accumulation steps: {effective_batch_size}")
+                
+                # Save metadata for non-rank-0 processes
+                experiment_state.save_metadata(
+                    batch_size=batch_size,
+                    num_devices=num_devices,
+                    effective_batch_size=effective_batch_size
+                )
     if wandb_logger:
         wandb_logger.watch(model.model, log="all")
+        
+        # Log batch size info to wandb (regardless of how it was determined)
+        effective_batch_size = batch_size * num_devices * cfg.hardware.num_nodes * cfg.training.accumulate_grad_batches
+        wandb_logger.log_hyperparams({
+            "final_batch_size": batch_size,
+            "num_devices": num_devices,
+            "num_nodes": cfg.hardware.num_nodes,
+            "accumulate_grad_batches": cfg.training.accumulate_grad_batches,
+            "effective_batch_size": effective_batch_size
+        })
     
     # Create data module with finalized batch size
     data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=batch_size)
@@ -495,6 +573,7 @@ def train_experiment(cfg: DictConfig):
         precision=cfg.training.precision,
         gradient_clip_val=cfg.training.get('gradient_clip_val', None),
         gradient_clip_algorithm=cfg.training.get('gradient_clip_algorithm', 'norm'),
+        accumulate_grad_batches=cfg.training.accumulate_grad_batches,
         logger=[csv_logger] + ([wandb_logger] if wandb_logger else []),
         callbacks=[checkpoint_callback],
         max_steps=effective_max_steps,
