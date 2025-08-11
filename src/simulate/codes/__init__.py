@@ -11,7 +11,7 @@ from .factory import CodeFactory
 from .steane_mixin import SteaneMixin
 from .types import CodeMetadata, SyndromeExtractionProcedure
 
-# from .bb import BivariateBicycle
+from .bb import BivariateBicycle
 from .color import ColorCode
 from .surface import SurfaceCode, SteaneSurfaceCode, SurfaceCodeBase
 from .qrm import QRMCode
@@ -24,7 +24,7 @@ __all__ = [
     # Mixins and decorators
     'SteaneMixin',
     # Specific code implementations
-    'ColorCode', 'SurfaceCode', 'SteaneSurfaceCode', 'SurfaceCodeBase', 'QRMCode',
+    'ColorCode', 'SurfaceCode', 'SteaneSurfaceCode', 'SurfaceCodeBase', 'QRMCode', 'BivariateBicycle',
     # Utilities
     # 'Visualizer'
 ]

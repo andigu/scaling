@@ -20,25 +20,27 @@ from dataset import TemporalSurfaceCodeDataset
 log = logging.getLogger(__name__)
 
 
-class SurfaceCodeDataModule(L.LightningDataModule):
+class CodeDataModule(L.LightningDataModule):
     """
-    Lightning DataModule for Surface Code datasets.
+    Lightning DataModule for quantum error correction code datasets.
     
     Handles dataset creation, dataloader setup, worker initialization,
     and curriculum learning resume support in a clean, reusable way.
     """
     
-    def __init__(self, cfg: DictConfig, stage_manager=None, batch_size: int = 32):
+    def __init__(self, cfg: DictConfig, stage_manager=None, batch_size: int = 32, dataset_class=None):
         """
         Args:
             cfg: Hydra configuration object
             stage_manager: Optional StageManager for curriculum learning
             batch_size: Batch size for training
+            dataset_class: Dataset class to use (defaults to TemporalSurfaceCodeDataset)
         """
         super().__init__()
         self.cfg = cfg
         self.stage_manager = stage_manager
         self.batch_size = batch_size
+        self.dataset_class = dataset_class if dataset_class is not None else TemporalSurfaceCodeDataset
         
         # Dataset will be created in setup()
         self.train_dataset = None
@@ -47,7 +49,9 @@ class SurfaceCodeDataModule(L.LightningDataModule):
         self.global_step_offset = 0
     
     def train_dataloader(self):
-        self.train_dataset = TemporalSurfaceCodeDataset(
+        # Create dataset with appropriate parameters based on dataset class
+        if self.dataset_class == TemporalSurfaceCodeDataset:
+            self.train_dataset = self.dataset_class(
                 d=self.cfg.dataset.d,
                 rounds_max=self.cfg.dataset.rounds_max,
                 p=self.cfg.dataset.p,
@@ -58,10 +62,38 @@ class SurfaceCodeDataModule(L.LightningDataModule):
                 num_workers=self.cfg.hardware.num_workers,
                 global_step_offset=self.global_step_offset
             )
+        else:
+            # For other dataset classes (e.g., BivariateBicycleDataset), use common parameters
+            dataset_kwargs = {
+                'rounds_max': self.cfg.dataset.rounds_max,
+                'p': self.cfg.dataset.p,
+                'batch_size': self.batch_size,
+                'stage_manager': self.stage_manager,
+                'num_workers': self.cfg.hardware.num_workers,
+                'global_step_offset': self.global_step_offset
+            }
             
-        log.info(f"Created surface code dataset: d={self.cfg.dataset.d}, "
-                f"rounds_max={self.cfg.dataset.rounds_max}, "
-                f"p={self.cfg.dataset.p}, batch_size={self.batch_size}")
+            # Add dataset-specific parameters if they exist
+            if hasattr(self.cfg.dataset, 'l'):
+                dataset_kwargs['l'] = self.cfg.dataset.l
+            if hasattr(self.cfg.dataset, 'm'):
+                dataset_kwargs['m'] = self.cfg.dataset.m
+            if hasattr(self.cfg.dataset, 'd'):
+                dataset_kwargs['d'] = self.cfg.dataset.d
+            if hasattr(self.cfg.dataset, 'mwpm_filter'):
+                dataset_kwargs['mwpm_filter'] = self.cfg.dataset.mwpm_filter
+            if hasattr(self.cfg.dataset, 'chunking'):
+                dataset_kwargs['chunking'] = self.cfg.dataset.get('chunking', (1, 1, 1))
+                
+            self.train_dataset = self.dataset_class(**dataset_kwargs)
+            
+        # Log dataset creation with appropriate parameters
+        dataset_info = f"rounds_max={self.cfg.dataset.rounds_max}, p={self.cfg.dataset.p}, batch_size={self.batch_size}"
+        if hasattr(self.cfg.dataset, 'd'):
+            dataset_info = f"d={self.cfg.dataset.d}, " + dataset_info
+        if hasattr(self.cfg.dataset, 'l') and hasattr(self.cfg.dataset, 'm'):
+            dataset_info = f"l={self.cfg.dataset.l}, m={self.cfg.dataset.m}, " + dataset_info
+        log.info(f"Created dataset ({self.dataset_class.__name__}): {dataset_info}")
         
         if self.stage_manager is not None:
             log.info("Dataset configured for curriculum learning")
@@ -147,15 +179,30 @@ class SurfaceCodeDataModule(L.LightningDataModule):
     
     def get_dataset_info(self) -> dict:
         """Get information about the current dataset configuration."""
-        return {
-            'dataset_type': 'TemporalSurfaceCodeDataset',
-            'd': self.cfg.dataset.d,
+        info = {
+            'dataset_type': self.dataset_class.__name__,
             'rounds_max': self.cfg.dataset.rounds_max,
             'p': self.cfg.dataset.p,
             'batch_size': self.batch_size,
-            'mwpm_filter': self.cfg.dataset.mwpm_filter,
-            'chunking': self.cfg.dataset.get('chunking', (1, 1, 1)),
             'num_workers': self.cfg.hardware.num_workers,
             'curriculum_enabled': self.stage_manager is not None,
             'global_step_offset': self.global_step_offset
         }
+        
+        # Add dataset-specific parameters if they exist
+        if hasattr(self.cfg.dataset, 'd'):
+            info['d'] = self.cfg.dataset.d
+        if hasattr(self.cfg.dataset, 'l'):
+            info['l'] = self.cfg.dataset.l
+        if hasattr(self.cfg.dataset, 'm'):
+            info['m'] = self.cfg.dataset.m
+        if hasattr(self.cfg.dataset, 'mwpm_filter'):
+            info['mwpm_filter'] = self.cfg.dataset.mwpm_filter
+        if hasattr(self.cfg.dataset, 'chunking'):
+            info['chunking'] = self.cfg.dataset.get('chunking', (1, 1, 1))
+            
+        return info
+
+
+# Backward compatibility alias
+SurfaceCodeDataModule = CodeDataModule

@@ -6,34 +6,6 @@ from torch.utils.data import IterableDataset
 import math
 import pymatching
 
-class EMA:
-    """Exponential Moving Average helper class."""
-    def __init__(self, decay=0.999):
-        self.decay = decay
-        self.value = None
-    
-    def update(self, new_value):
-        if self.value is None:
-            self.value = new_value
-        else:
-            self.value = self.decay * self.value + (1 - self.decay) * new_value
-        return self.value
-    
-    def get(self):
-        return self.value if self.value is not None else 0.0
-    
-    def state_dict(self):
-        """Return state dictionary for checkpointing."""
-        return {
-            'decay': self.decay,
-            'value': self.value
-        }
-    
-    def load_state_dict(self, state_dict):
-        """Load state from checkpoint."""
-        self.decay = state_dict['decay']
-        self.value = state_dict['value']
-
 
 class TemporalSurfaceCodeDataset(IterableDataset):
     """

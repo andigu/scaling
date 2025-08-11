@@ -29,7 +29,35 @@ import random
 from resnet import ResNet3D
 from stage_manager import StageManager, CurriculumConfig
 from data_module import SurfaceCodeDataModule
-from dataset import EMA
+
+
+class EMA:
+    """Exponential Moving Average helper class."""
+    def __init__(self, decay=0.999):
+        self.decay = decay
+        self.value = None
+    
+    def update(self, new_value):
+        if self.value is None:
+            self.value = new_value
+        else:
+            self.value = self.decay * self.value + (1 - self.decay) * new_value
+        return self.value
+    
+    def get(self):
+        return self.value if self.value is not None else 0.0
+    
+    def state_dict(self):
+        """Return state dictionary for checkpointing."""
+        return {
+            'decay': self.decay,
+            'value': self.value
+        }
+    
+    def load_state_dict(self, state_dict):
+        """Load state from checkpoint."""
+        self.decay = state_dict['decay']
+        self.value = state_dict['value']
 
 # Setup logging
 log = logging.getLogger(__name__)
@@ -113,6 +141,7 @@ class ResNet3DTrainer(L.LightningModule):
         
         self.cfg = cfg
         self.lr = cfg.training.lr
+        self.weight_decay = cfg.training.weight_decay
         
         # Initialize curriculum learning if enabled
         curriculum_config = CurriculumConfig(
@@ -138,7 +167,7 @@ class ResNet3DTrainer(L.LightningModule):
         self.reset_metrics()
     
     def setup(self, stage: str) -> None:
-        """Called when trainer initializes. Set per-GPU seeds and handle resume."""
+        """Called when trainer initializes. Set per-GPU seeds."""
         if stage == "fit":
             # Get local rank (0 for single GPU, 0,1,2,... for multi-GPU)
             local_rank = 0
@@ -146,10 +175,6 @@ class ResNet3DTrainer(L.LightningModule):
                 local_rank = self.trainer.local_rank
             elif hasattr(self.trainer, 'strategy') and hasattr(self.trainer.strategy, 'local_rank'):
                 local_rank = self.trainer.strategy.local_rank
-            
-            # Update DataModule global step offset if we resumed from checkpoint
-            if hasattr(self, '_resume_global_step') and hasattr(self.trainer, 'datamodule'):
-                self.trainer.datamodule.update_global_step_offset(self._resume_global_step)
         
     def reset_metrics(self):
         self.loss_ema = EMA(0.995)
@@ -167,6 +192,12 @@ class ResNet3DTrainer(L.LightningModule):
         stage_prefix = ""
         if self.stage_manager is not None:
             transition = self.stage_manager.check_stage_transition(self.global_step)
+            if transition is not None and self.trainer.is_global_zero:
+                # Save checkpoint when completing a phase
+                old_stage, new_stage = transition
+                checkpoint_path = f"{self.trainer.checkpoint_callback.dirpath}/{self.cfg.experiment.name}-phase{old_stage}-step{self.global_step}.ckpt"
+                self.trainer.save_checkpoint(checkpoint_path)
+                log.info(f"Saved phase {old_stage} completion checkpoint: {checkpoint_path}")
             stage_prefix = self.stage_manager.get_stage_prefix(self.global_step)
             
         # Track metrics (only on main process in multi-GPU)
@@ -187,8 +218,9 @@ class ResNet3DTrainer(L.LightningModule):
         return loss
     
     def configure_optimizers(self):
-        optimizer = schedulefree.RAdamScheduleFree(self.parameters(), lr=self.lr)
-        optimizer.train()
+        #optimizer = schedulefree.RAdamScheduleFree(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        #optimizer.train()
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         return optimizer
     
     def state_dict(self):
@@ -257,6 +289,7 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, num_d
             'embedding_dim': cfg.model.embedding_dim,
             'channel_multipliers': cfg.model.get('channel_multipliers', [2, 4, 8, 16]),
             'lr': cfg.training.lr,
+            'weight_decay': cfg.training.weight_decay,
             'gradient_clip_val': cfg.training.get('gradient_clip_val', None),
             'gradient_clip_algorithm': cfg.training.get('gradient_clip_algorithm', 'norm'),
             'accumulate_grad_batches': cfg.training.accumulate_grad_batches,
@@ -315,6 +348,7 @@ def train_experiment(cfg: DictConfig):
     log.info(f"Architecture: {cfg.model.architecture}")
     log.info(f"Embedding Dim: {cfg.model.embedding_dim}")
     log.info(f"Learning Rate: {cfg.training.lr}")
+    log.info(f"Weight Decay: {cfg.training.weight_decay}")
     log.info(f"Gradient Clip Val: {cfg.training.get('gradient_clip_val', None)}")
     log.info(f"Gradient Clip Algorithm: {cfg.training.get('gradient_clip_algorithm', 'norm')}")
     log.info(f"Accumulate Grad Batches: {cfg.training.accumulate_grad_batches}")
@@ -430,12 +464,9 @@ def train_experiment(cfg: DictConfig):
     Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
-        filename=f'{cfg.experiment.name}-{{step}}-{{loss_ema:.4f}}',
-        monitor='loss_ema',
+        filename=f'{cfg.experiment.name}-{{step}}',
         mode='min',
         train_time_interval=timedelta(minutes=cfg.training.checkpoint_every_minutes),
-        save_top_k=3,  # Keep all checkpoints
-        auto_insert_metric_name=False
     )
     
     # num_devices already calculated above for logging
@@ -559,9 +590,11 @@ def train_experiment(cfg: DictConfig):
     
     # Handle resume - update DataModule global step offset if resuming
     if resume_checkpoint:
-        # We need to get the global step from the checkpoint
-        # For now we'll handle this in the fit() call, but we could also load it here
-        log.info("DataModule will be updated with resume step during checkpoint loading")
+        # Load the checkpoint to get the global step BEFORE creating the data module
+        checkpoint = torch.load(resume_checkpoint, map_location='cpu')
+        resume_global_step = checkpoint.get('global_step', 0)
+        data_module.update_global_step_offset(resume_global_step)
+        log.info(f"Updated DataModule global_step_offset to {resume_global_step} for resume")
         
     # Create trainer (this spawns other ranks in multi-GPU mode)
     trainer = L.Trainer(

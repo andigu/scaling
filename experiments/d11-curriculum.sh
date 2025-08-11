@@ -79,10 +79,10 @@ python src/train.py \
     hardware.persistent_workers=true \
     curriculum.enabled=true \
     curriculum.stage1_p=0.5 \
-    curriculum.stage1_steps=200000 \
+    curriculum.stage1_steps=40000 \
     curriculum.stage2_p_end=2.1 \
-    curriculum.stage2_steps=200000 \
-    curriculum.stage3_steps=100000 \
+    curriculum.stage2_steps=50000 \
+    curriculum.stage3_steps=20000 \
     experiment.name=d11-curriculum \
     wandb.enabled=true \
     wandb.project=scaling

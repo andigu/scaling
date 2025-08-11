@@ -8,7 +8,7 @@ measurement tracking capabilities.
 from .algorithm import Algorithm, Layer
 from .codes import (
     Code, CSSCode, CodeFactory, ColorCode, SurfaceCode, SteaneSurfaceCode,
-    SurfaceCodeBase, QRMCode
+    SurfaceCodeBase, QRMCode, BivariateBicycle
 )
 from .instruction import Instruction
 from .logical_circuit import LogicalCircuit
@@ -33,7 +33,7 @@ __all__ = [
     'ColorCode',
     'QRMCode',
     'SteaneSurfaceCode',
-    # 'BivariateBicycle',
+    'BivariateBicycle',
     
     # Measurement tracking
     'MeasurementTracker',

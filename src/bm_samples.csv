@@ -1,0 +1,10 @@
+     shots,    errors,  discards, seconds,decoder,strong_id,json_metadata,custom_counts
+     50000,      1432,         0,    47.9,beliefmatching,fc4d15a9836cc2a6c9b9dd5e5a6bb3efd24cf564b456222c14bef17b5a9ef350,"{""d"":3}",
+     50000,      1694,         0,   674.4,beliefmatching,13d561fefb50eab147b17c5c02b1b47e3dea09563fbb552892000298082da84b,"{""d"":5}",
+     50000,      1709,         0,  3436.8,beliefmatching,39a607efcadbffbb24eb761181934999b20398ae339130d9cd473089ff35a831,"{""d"":7}",
+     50000,      1714,         0, 17173.5,beliefmatching,09a4dd8940e8df3f8b01a3d62548a84322a293b9cd443c0b68d1129d47132f0b,"{""d"":9}",
+     50000,      1857,         0, 58420.2,beliefmatching,813fe067277d4ccbbe34e48c0b34f97b973a3fdb33b4cec103ee30252404a133,"{""d"":11}",
+     50000,      1821,         0,105649.1,beliefmatching,bfcf279dcee5ab35b7557fde1abbcbdb1a398496fe52a0ade17c51707e61b282,"{""d"":13}",
+     50000,      1795,         0,163260.5,beliefmatching,fd5ae7ef1edbbe8b7cedc0ea16f886ef5c89c92942a230eaa87f58383b14494f,"{""d"":15}",
+     50000,      1782,         0,239857.5,beliefmatching,9ee18f7536b867f863dd9e8bc05d3a53c4a622d46e7094d32d28603e158c77df,"{""d"":17}",
+     50000,      1848,         0,361272.8,beliefmatching,19a2e0eb82ddc05d2548d4b0389ba02fc9336484905f825bd950c543acd6afb8,"{""d"":19}",
