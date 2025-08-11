@@ -27,8 +27,11 @@ import hydra
 import random
 
 from resnet import ResNet3D
+from rgcn import RGCN
 from stage_manager import StageManager, CurriculumConfig
-from data_module import SurfaceCodeDataModule
+from data_module import CodeDataModule
+from dataset import TemporalSurfaceCodeDataset
+from bb_dataset import BivariateBicycleDataset
 
 
 class EMA:
@@ -61,6 +64,17 @@ class EMA:
 
 # Setup logging
 log = logging.getLogger(__name__)
+
+
+def get_dataset_class(cfg: DictConfig):
+    """Get the appropriate dataset class based on code type."""
+    code_type = cfg.dataset.get('code_type', 'surface_code')
+    if code_type == 'bivariate_bicycle':
+        return BivariateBicycleDataset
+    elif code_type == 'surface_code':
+        return TemporalSurfaceCodeDataset
+    else:
+        raise ValueError(f"Unknown code_type: {code_type}. Must be 'surface_code' or 'bivariate_bicycle'")
 
 # Enable optimizations
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -154,16 +168,25 @@ class ResNet3DTrainer(L.LightningModule):
         )
         self.stage_manager = StageManager(curriculum_config) if curriculum_config.enabled else None
         
-        # Create model
-        self.model = ResNet3D(
-            architecture=cfg.model.architecture,
-            embedding_dim=cfg.model.embedding_dim,
-            channel_multipliers=cfg.model.get('channel_multipliers', None),
-            stage3_stride=tuple(cfg.model.stage3_stride),
-            stage4_stride=tuple(cfg.model.stage4_stride),
-            use_lstm=cfg.model.get('use_lstm', False),
-            chunking=cfg.dataset.get('chunking', (1, 1, 1))
-        )
+        # Create model based on architecture
+        if cfg.model.architecture.startswith('rgcn'):
+            self.model = RGCN(
+                architecture=cfg.model.architecture,
+                embedding_dim=cfg.model.embedding_dim,
+                channel_multipliers=cfg.model.get('channel_multipliers', None),
+                use_lstm=cfg.model.get('use_lstm', False),
+                num_relations=cfg.model.get('num_relations', 12)
+            )
+        else:  # ResNet architectures
+            self.model = ResNet3D(
+                architecture=cfg.model.architecture,
+                embedding_dim=cfg.model.embedding_dim,
+                channel_multipliers=cfg.model.get('channel_multipliers', None),
+                stage3_stride=tuple(cfg.model.stage3_stride),
+                stage4_stride=tuple(cfg.model.stage4_stride),
+                use_lstm=cfg.model.get('use_lstm', False),
+                chunking=cfg.dataset.get('chunking', (1, 1, 1))
+            )
         self.reset_metrics()
     
     def setup(self, stage: str) -> None:
@@ -180,12 +203,19 @@ class ResNet3DTrainer(L.LightningModule):
         self.loss_ema = EMA(0.995)
         self.inacc_ema = [EMA(0.995) for _ in range(self.cfg.dataset.rounds_max + 1)]
     
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
 
     def training_step(self, batch, batch_idx):
-        x, y, (t, p_err) = batch
-        pred = self(x)
+        if self.cfg.model.architecture.startswith('rgcn'):
+            # RGCN input: x, y, (edge_index, edge_attr), (t, p_err)
+            x, y, (edge_index, edge_attr), (t, p_err) = batch
+            pred = self.model(x, edge_index, edge_attr)
+        else:
+            # ResNet3D input: x, y, (t, p_err)
+            x, y, (t, p_err) = batch
+            pred = self.model(x)
+        
         loss = F.binary_cross_entropy_with_logits(pred, y)
         
         # Check for stage transitions and log if needed
@@ -353,11 +383,22 @@ def train_experiment(cfg: DictConfig):
     log.info(f"Gradient Clip Algorithm: {cfg.training.get('gradient_clip_algorithm', 'norm')}")
     log.info(f"Accumulate Grad Batches: {cfg.training.accumulate_grad_batches}")
     log.info(f"Channel Multipliers: {cfg.model.get('channel_multipliers', [2, 4, 8, 16])}")
-    log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")
-    log.info(f"Stage4 Stride: {cfg.model.stage4_stride}")
-    log.info(f"Use LSTM: {cfg.model.use_lstm}")
-    log.info(f"Chunking: {cfg.dataset.chunking}")
-    log.info(f"Dataset: d={cfg.dataset.d}, rounds_max={cfg.dataset.rounds_max}, p={cfg.dataset.p}")
+    
+    # Log model-specific parameters
+    if cfg.model.architecture.startswith('rgcn'):
+        log.info(f"Num Relations: {cfg.model.get('num_relations', 12)}")
+    else:
+        log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")
+        log.info(f"Stage4 Stride: {cfg.model.stage4_stride}")
+        log.info(f"Use LSTM: {cfg.model.use_lstm}")
+        log.info(f"Chunking: {cfg.dataset.chunking}")
+    
+    # Log dataset-specific parameters
+    code_type = cfg.dataset.get('code_type', 'surface_code')
+    if code_type == 'bivariate_bicycle':
+        log.info(f"Dataset: code_type={code_type}, l={cfg.dataset.l}, m={cfg.dataset.m}, rounds_max={cfg.dataset.rounds_max}, p={cfg.dataset.p}")
+    else:
+        log.info(f"Dataset: code_type={code_type}, d={cfg.dataset.d}, rounds_max={cfg.dataset.rounds_max}, p={cfg.dataset.p}")
     
     # Log curriculum learning configuration
     if cfg.curriculum.enabled:
@@ -516,7 +557,8 @@ def train_experiment(cfg: DictConfig):
                     precision=cfg.training.precision,
                 )
                 tuner = Tuner(tuning_trainer)
-                temp_data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=2)
+                dataset_class = get_dataset_class(cfg)
+                temp_data_module = CodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=2, dataset_class=dataset_class)
                 tuner.scale_batch_size(model, datamodule=temp_data_module, mode="binsearch", steps_per_trial=10)
                 log.info("Found optimal batch size " + str(temp_data_module.batch_size))
                 model.reset_metrics()
@@ -586,7 +628,8 @@ def train_experiment(cfg: DictConfig):
         })
     
     # Create data module with finalized batch size
-    data_module = SurfaceCodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=batch_size)
+    dataset_class = get_dataset_class(cfg)
+    data_module = CodeDataModule(cfg, stage_manager=model.stage_manager, batch_size=batch_size, dataset_class=dataset_class)
     
     # Handle resume - update DataModule global step offset if resuming
     if resume_checkpoint:

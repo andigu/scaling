@@ -6,23 +6,37 @@ defaults:
 
 # Dataset parameters (fixed, not swept)
 dataset:
+  code_type: "surface_code" # "surface_code" or "bivariate_bicycle"
+  
+  # Surface code parameters (used when code_type="surface_code")
   d: 9                     # Surface code distance
-  p: 2.1                   # Error probability parameter
-  rounds_max: 19            # Maximum number of rounds
-  mwpm_filter: false        # Enable/disable MWPM filtering
+  mwpm_filter: false       # Enable/disable MWPM filtering
   chunking: [1,1,1]        # Chunk by time, x, and y dimension
+  
+  # Bivariate bicycle parameters (used when code_type="bivariate_bicycle")
+  l: 6                     # BB code parameter l
+  m: 6                     # BB code parameter m
+  
+  # Common parameters
+  p: 2.1                   # Error probability parameter
+  rounds_max: 19           # Maximum number of rounds
 
 # Model architecture (main sweep targets)
 model:
-  architecture: resnet50   # resnet18/resnet34/resnet50/resnet101/resnet152
-  embedding_dim: 64      # Embedding dimension
+  architecture: resnet50   # resnet18/34/50/101/152 OR rgcn18/34/50/101/152
+  embedding_dim: 64        # Embedding dimension
   channel_multipliers: [2, 4, 8, 16]  # Channel expansion per stage [stage1, stage2, stage3, stage4]
                                        # [2,4,8,16] = standard ResNet (default)
                                        # [1,1,1,1] = constant channels (memory efficient)
                                        # [1,1.5,2,2.5] = gradual growth
-  stage3_stride: [1,1,1]  # Stage 3 downsampling stride (T,H,W)
-  stage4_stride: [1,1,1]  # Stage 4 downsampling stride (T,H,W)
-  use_lstm: false
+  
+  # ResNet3D specific parameters (ignored for RGCN)
+  stage3_stride: [1,1,1]   # Stage 3 downsampling stride (T,H,W)
+  stage4_stride: [1,1,1]   # Stage 4 downsampling stride (T,H,W)
+  use_lstm: false          # LSTM for temporal processing
+  
+  # RGCN specific parameters (ignored for ResNet3D)
+  num_relations: 12        # Number of edge types in graph
 
 # Training parameters
 training:

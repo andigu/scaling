@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import IterableDataset
 from torch_geometric.data import Data
 import math
+from functools import lru_cache
 
 
 class BivariateBicycleDataset(IterableDataset):
@@ -42,10 +43,6 @@ class BivariateBicycleDataset(IterableDataset):
         
         # Track local worker sample count (will be set in each worker)
         self.local_sample_count = 0
-        
-        # Cache graph structure for efficiency
-        self._graph_structure = None
-        self._all_edge_types = None
     
     def _estimate_global_step(self) -> int:
         """Estimate current global step from worker-local sample count."""
@@ -59,11 +56,13 @@ class BivariateBicycleDataset(IterableDataset):
         else:
             return self.default_p
     
-    def _build_graph_structure(self, rounds):
-        """Build the graph structure for the BB code with given rounds."""
+    @staticmethod
+    @lru_cache(maxsize=32)
+    def _build_graph_structure(l, m, rounds):
+        """Build the graph structure for the BB code with given l, m, rounds."""
         # Create BB code circuit and metadata
         alg = Algorithm.build_memory(cycles=rounds)
-        cf = CodeFactory(BivariateBicycle, {'l': self.l, 'm': self.m})
+        cf = CodeFactory(BivariateBicycle, {'l': l, 'm': m})
         metadata = cf().metadata
         
         # Build tanner graph - this creates edges between checks and data
@@ -137,33 +136,6 @@ class BivariateBicycleDataset(IterableDataset):
         
         return detectors, logical_errors, (rounds, p)
     
-    def _create_graph_batch(self, detectors, logical_errors, rounds):
-        """Convert detector data to PyTorch Geometric batch."""
-        if self._graph_structure is None or self._graph_structure.get('rounds') != rounds:
-            self._graph_structure = self._build_graph_structure(rounds)
-            self._graph_structure['rounds'] = rounds
-        
-        batch_size, num_detectors = detectors.shape
-        
-        # Create node features from detector measurements
-        # detectors: (batch_size, num_detectors) -> need to reshape for graph
-        node_features = detectors.astype(np.float32) + 1  # Convert -1,0,1 to 0,1,2
-        
-        # Create list of Data objects for batch
-        data_list = []
-        for i in range(batch_size):
-            data = Data(
-                x=torch.from_numpy(node_features[i:i+1].T),  # (num_nodes, 1)
-                edge_index=torch.from_numpy(self._graph_structure['edge_index']).long(),
-                edge_attr=torch.from_numpy(self._graph_structure['edge_attr']).long(),
-                y=torch.from_numpy(logical_errors[i].astype(np.float32)),
-                num_nodes=self._graph_structure['num_nodes'],
-                num_edge_types=self._graph_structure['num_edge_types']
-            )
-            data_list.append(data)
-        
-        return data_list
-    
     def __iter__(self):
         """Generate infinite stream of bivariate bicycle code data batches."""
         worker_info = torch.utils.data.get_worker_info()
@@ -184,13 +156,12 @@ class BivariateBicycleDataset(IterableDataset):
             detectors, logical_errors, (rounds, p) = self.generate_batch(
                 self.l, self.m, self.rounds_max, current_p, self.batch_size
             )
-            
-            # Convert to graph batch
-            graph_batch = self._create_graph_batch(detectors, logical_errors, rounds)
-            
-            # Yield each graph in the batch
-            for graph_data in graph_batch:
-                yield graph_data
-            
+            graph_structure = self._build_graph_structure(self.l, self.m, rounds)
+            edge_indices, edge_types = graph_structure['edge_index'], graph_structure['edge_attr'] # (2, |E|), (|E|, )
+            num_nodes = detectors.shape[1]
+            edge_indices = (edge_indices[..., None] + np.arange(self.batch_size)[None, None, :] * num_nodes).reshape((2, -1))
+            edge_types = np.repeat(edge_types[:, None], self.batch_size, axis=1).reshape(-1)
+            yield detectors.astype(np.int32), logical_errors.astype(np.float32), (edge_indices, edge_types), (rounds, p)
+
             # Increment local sample count after generating batch
             self.local_sample_count += 1

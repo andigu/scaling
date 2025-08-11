@@ -1,0 +1,18 @@
+# @package _global_
+# Bivariate Bicycle code baseline experiment
+
+dataset:
+  code_type: "bivariate_bicycle"
+  l: 6
+  m: 6
+  p: 2.1
+  rounds_max: 9
+
+model:
+  architecture: rgcn50
+  embedding_dim: 128
+  channel_multipliers: [2, 4, 8, 16]
+  num_relations: 36  # 12 edge types * 3 temporal connections
+
+experiment:
+  name: bb_baseline
