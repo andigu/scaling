@@ -19,7 +19,7 @@ dataset:
   
   # Common parameters
   p: 2.1                   # Error probability parameter
-  rounds_max: 19           # Maximum number of rounds
+  rounds_list: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]  # List of rounds to sample from
 
 # Model architecture (main sweep targets)
 model:
@@ -43,7 +43,7 @@ training:
   batch_size: null       # Manual batch size override (null = auto-tune)
   lr: 3e-4               # Learning rate (main sweep target)
   weight_decay: 0.0      # Weight decay for regularization (reasonable range: 1e-4 to 5e-4)
-  optimizer: adamw       # Optimizer choice: adamw or schedulefree
+  optimizer: schedulefree       # Optimizer choice: adamw or schedulefree
   max_steps: 50000       # Maximum training steps
   log_every_n_steps: 100 # Logging frequency
   checkpoint_every_minutes: 15  # Checkpoint frequency in minutes

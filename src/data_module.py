@@ -53,7 +53,7 @@ class CodeDataModule(L.LightningDataModule):
         if self.dataset_class == TemporalSurfaceCodeDataset:
             self.train_dataset = self.dataset_class(
                 d=self.cfg.dataset.d,
-                rounds_max=self.cfg.dataset.rounds_max,
+                rounds_list=self.cfg.dataset.rounds_list,
                 p=self.cfg.dataset.p,
                 batch_size=self.batch_size,
                 mwpm_filter=self.cfg.dataset.mwpm_filter,
@@ -65,7 +65,7 @@ class CodeDataModule(L.LightningDataModule):
         else:
             # For other dataset classes (e.g., BivariateBicycleDataset), use common parameters
             dataset_kwargs = {
-                'rounds_max': self.cfg.dataset.rounds_max,
+                'rounds_list': self.cfg.dataset.rounds_list,
                 'p': self.cfg.dataset.p,
                 'batch_size': self.batch_size,
                 'stage_manager': self.stage_manager,
@@ -88,7 +88,7 @@ class CodeDataModule(L.LightningDataModule):
             self.train_dataset = self.dataset_class(**dataset_kwargs)
             
         # Log dataset creation with appropriate parameters
-        dataset_info = f"rounds_max={self.cfg.dataset.rounds_max}, p={self.cfg.dataset.p}, batch_size={self.batch_size}"
+        dataset_info = f"rounds_list={self.cfg.dataset.rounds_list}, p={self.cfg.dataset.p}, batch_size={self.batch_size}"
         if hasattr(self.cfg.dataset, 'd'):
             dataset_info = f"d={self.cfg.dataset.d}, " + dataset_info
         if hasattr(self.cfg.dataset, 'l') and hasattr(self.cfg.dataset, 'm'):
@@ -186,7 +186,7 @@ class CodeDataModule(L.LightningDataModule):
         """Get information about the current dataset configuration."""
         info = {
             'dataset_type': self.dataset_class.__name__,
-            'rounds_max': self.cfg.dataset.rounds_max,
+            'rounds_list': self.cfg.dataset.rounds_list,
             'p': self.cfg.dataset.p,
             'batch_size': self.batch_size,
             'num_workers': self.cfg.hardware.num_workers,

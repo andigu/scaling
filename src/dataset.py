@@ -17,12 +17,12 @@ class TemporalSurfaceCodeDataset(IterableDataset):
     Supports 3-stage curriculum learning with automatic p adjustment.
     """
     
-    def __init__(self, d=9, rounds_max=9, p=2.0, batch_size=32, mwpm_filter=True, chunking=(1,1,1), 
+    def __init__(self, d=9, rounds_list=None, p=2.0, batch_size=32, mwpm_filter=True, chunking=(1,1,1), 
                  stage_manager=None, num_workers=8, global_step_offset=0, **kwargs):
         """
         Args:
             d: Surface code distance
-            rounds_max: Maximum number of error correction rounds
+            rounds_list: List of rounds to sample from (e.g., [1,2,3,4,5])
             p: Default error probability parameter (used when stage_manager is None)
             batch_size: Batch size for generated data
             mwpm_filter: Enable/disable MWPM filtering for harder samples
@@ -35,7 +35,7 @@ class TemporalSurfaceCodeDataset(IterableDataset):
         self.default_p = p
         self.batch_size = batch_size
         self.d = d
-        self.rounds_max = rounds_max
+        self.rounds_list = rounds_list if rounds_list is not None else list(range(1, 10))
         self.mwpm_filter = mwpm_filter
         self.chunking = chunking
         self.stage_manager = stage_manager
@@ -60,10 +60,11 @@ class TemporalSurfaceCodeDataset(IterableDataset):
             return self.default_p
         
     @staticmethod
-    def generate_batch(d, rounds_max, p, batch_size, mwpm_filter=True, chunking=(1,1,1)):
+    def generate_batch(d, rounds_list, p, batch_size, mwpm_filter=True, chunking=(1,1,1)):
         """Generate a single batch of surface code data."""
-        rounds = np.random.randint(1, rounds_max+1)
-        batch_size = math.floor(batch_size * rounds_max/rounds)
+        rounds = np.random.choice(rounds_list)
+        max_rounds = max(rounds_list)
+        batch_size = math.floor(batch_size * max_rounds/rounds)
         
         # Create surface code circuit
         alg = Algorithm.build_memory(cycles=rounds)
@@ -129,8 +130,8 @@ class TemporalSurfaceCodeDataset(IterableDataset):
             current_p = self.get_current_p()
             
             # Generate batch with current curriculum p value
-            chunked, logical_errors, (rounds, p) = self.generate_batch(self.d, self.rounds_max, current_p, self.batch_size, self.mwpm_filter, self.chunking)
-            yield (chunked,), logical_errors, (rounds, p)
+            chunked, logical_errors, (rounds, p) = self.generate_batch(self.d, self.rounds_list, current_p, self.batch_size, self.mwpm_filter, self.chunking)
+            yield (chunked,), logical_errors, (str(rounds), p)
             
             # Increment local sample count after generating batch
             self.local_sample_count += 1

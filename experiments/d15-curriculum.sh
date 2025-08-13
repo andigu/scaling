@@ -2,7 +2,7 @@
 #SBATCH --job-name=d15-curriculum
 #SBATCH --partition=gpu_requeue
 #SBATCH --constraint="h100"
-#SBATCH --cpus-per-gpu=16
+#SBATCH --cpus-per-gpu=7
 #SBATCH --gres=gpu:4
 #SBATCH --mem=48G
 #SBATCH --time=24:00:00
@@ -56,13 +56,13 @@ echo ""
 python src/train.py \
     experiment=baseline \
     dataset.d=15 \
-    dataset.rounds_max=15 \
+    dataset.rounds_list=[15] \
     dataset.mwpm_filter=false \
     dataset.chunking=[1,1,1] \
     model.architecture=resnet50 \
     model.embedding_dim=128 \
     model.channel_multipliers=[2,2.5,3,3.5] \
-    training.lr=2e-4 \
+    training.lr=4e-4 \
     training.batch_size=null \
     training.log_every_n_steps=100 \
     training.checkpoint_every_minutes=15 \
@@ -74,7 +74,7 @@ python src/train.py \
     hardware.strategy=auto \
     hardware.num_nodes=1 \
     hardware.sync_batchnorm=true \
-    hardware.num_workers=16 \
+    hardware.num_workers=7 \
     hardware.prefetch_factor=4 \
     hardware.persistent_workers=true \
     curriculum.enabled=true \

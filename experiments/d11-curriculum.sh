@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=d11-curriculum
 #SBATCH --partition=gpu_requeue
-#SBATCH --constraint="h100"
-#SBATCH --cpus-per-gpu=16
-#SBATCH --gres=gpu:4
-#SBATCH --mem=48G
-#SBATCH --time=24:00:00
+#SBATCH --constraint="h100|h200"
+#SBATCH --cpus-per-gpu=6
+#SBATCH --gres=gpu:2
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
 #SBATCH --requeue
 #SBATCH --output=/n/netscratch/yelin_lab/Everyone/andigu/scaling/d11-curriculum/slurm_%j.out
 #SBATCH --error=/n/netscratch/yelin_lab/Everyone/andigu/scaling/d11-curriculum/slurm_%j.err
@@ -56,7 +56,7 @@ echo ""
 python src/train.py \
     experiment=baseline \
     dataset.d=11 \
-    dataset.rounds_max=11 \
+    dataset.rounds_list=[11] \
     dataset.mwpm_filter=false \
     dataset.chunking=[1,1,1] \
     model.architecture=resnet50 \
@@ -70,11 +70,11 @@ python src/train.py \
     training.gradient_clip_val=1.0 \
     training.gradient_clip_algorithm=norm \
     hardware.accelerator=auto \
-    hardware.devices=4 \
+    hardware.devices=2 \
     hardware.strategy=auto \
     hardware.num_nodes=1 \
     hardware.sync_batchnorm=true \
-    hardware.num_workers=16 \
+    hardware.num_workers=6 \
     hardware.prefetch_factor=4 \
     hardware.persistent_workers=true \
     curriculum.enabled=true \

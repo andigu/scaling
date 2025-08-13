@@ -177,7 +177,7 @@ class ResNet3DTrainer(L.LightningModule):
                 temp_dataset = dataset_class(
                     l=cfg.dataset.l,
                     m=cfg.dataset.m,
-                    rounds_max=cfg.dataset.rounds_max,
+                    rounds_list=cfg.dataset.rounds_list,
                     p=cfg.dataset.p,
                     batch_size=1  # Minimal size for initialization
                 )
@@ -219,14 +219,14 @@ class ResNet3DTrainer(L.LightningModule):
         
     def reset_metrics(self):
         self.loss_ema = EMA(0.995)
-        self.inacc_ema = [EMA(0.995) for _ in range(self.cfg.dataset.rounds_max + 1)]
+        self.inacc_ema = {r: EMA(0.995) for r in self.cfg.dataset.rounds_list}
     
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
 
     def training_step(self, batch, batch_idx):
         # Unified format: (input1, input2, ...), y, (t, p_err)
-        x, y, (t, p_err) = batch
+        x, y, (t_str, p_err) = batch
         
         # Forward pass with unpacked inputs
         pred = self.model(*x)
@@ -251,13 +251,12 @@ class ResNet3DTrainer(L.LightningModule):
             inacc = ((pred > 0) != y).float().mean().item()
             
             self.loss_ema.update(loss_item)
-            self.inacc_ema[t-1].update(inacc)
+            self.inacc_ema[int(t_str)].update(inacc)
         
         # Log metrics with stage prefix (Lightning handles multi-GPU synchronization)
         self.log(f'{stage_prefix}loss_ema', self.loss_ema.get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
-        if batch_idx > 150:
-            for t2 in range(len(self.inacc_ema)):
-                self.log(f'{stage_prefix}inacc_{t2}', self.inacc_ema[t2].get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
+        for t2 in sorted(self.inacc_ema.keys()):
+            self.log(f'{stage_prefix}inacc_{t2}', self.inacc_ema[t2].get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
         if self.stage_manager is not None:
             self.log(f'curriculum_p', p_err, on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
         return loss
@@ -278,7 +277,7 @@ class ResNet3DTrainer(L.LightningModule):
         
         # Add EMA states
         state['loss_ema'] = self.loss_ema.state_dict()
-        state['inacc_ema'] = [ema.state_dict() for ema in self.inacc_ema]
+        state['inacc_ema'] = {r: ema.state_dict() for r, ema in self.inacc_ema.items()}
         
         # Add stage manager state for curriculum learning
         if self.stage_manager is not None:
@@ -301,9 +300,9 @@ class ResNet3DTrainer(L.LightningModule):
             self.loss_ema.load_state_dict(loss_ema_state)
         
         if inacc_ema_states is not None:
-            for i, ema_state in enumerate(inacc_ema_states):
-                if i < len(self.inacc_ema):
-                    self.inacc_ema[i].load_state_dict(ema_state)
+            for r, ema_state in inacc_ema_states.items():
+                if r in self.inacc_ema:
+                    self.inacc_ema[r].load_state_dict(ema_state)
         
         # Restore stage manager state if available
         if stage_manager_state is not None and self.stage_manager is not None:
@@ -348,7 +347,7 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, num_d
             'stage3_stride': cfg.model.stage3_stride,
             'stage4_stride': cfg.model.stage4_stride,
             'dataset_d': cfg.dataset.d,
-            'dataset_rounds_max': cfg.dataset.rounds_max,
+            'dataset_rounds_list': cfg.dataset.rounds_list,
             'dataset_p': cfg.dataset.p,
             'curriculum_enabled': cfg.curriculum.enabled,
             'curriculum_stage1_p': cfg.curriculum.stage1_p if cfg.curriculum.enabled else None,
@@ -431,9 +430,9 @@ def train_experiment(cfg: DictConfig):
     # Log dataset-specific parameters
     code_type = cfg.dataset.get('code_type', 'surface_code')
     if code_type == 'bivariate_bicycle':
-        log.info(f"Dataset: code_type={code_type}, l={cfg.dataset.l}, m={cfg.dataset.m}, rounds_max={cfg.dataset.rounds_max}, p={cfg.dataset.p}")
+        log.info(f"Dataset: code_type={code_type}, l={cfg.dataset.l}, m={cfg.dataset.m}, rounds_list={cfg.dataset.rounds_list}, p={cfg.dataset.p}")
     else:
-        log.info(f"Dataset: code_type={code_type}, d={cfg.dataset.d}, rounds_max={cfg.dataset.rounds_max}, p={cfg.dataset.p}")
+        log.info(f"Dataset: code_type={code_type}, d={cfg.dataset.d}, rounds_list={cfg.dataset.rounds_list}, p={cfg.dataset.p}")
     
     # Log curriculum learning configuration
     if cfg.curriculum.enabled:
