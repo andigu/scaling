@@ -18,7 +18,7 @@ class TemporalSurfaceCodeDataset(IterableDataset):
     """
     
     def __init__(self, d=9, rounds_max=9, p=2.0, batch_size=32, mwpm_filter=True, chunking=(1,1,1), 
-                 stage_manager=None, num_workers=8, global_step_offset=0):
+                 stage_manager=None, num_workers=8, global_step_offset=0, **kwargs):
         """
         Args:
             d: Surface code distance
@@ -129,7 +129,8 @@ class TemporalSurfaceCodeDataset(IterableDataset):
             current_p = self.get_current_p()
             
             # Generate batch with current curriculum p value
-            yield self.generate_batch(self.d, self.rounds_max, current_p, self.batch_size, self.mwpm_filter, self.chunking)
+            chunked, logical_errors, (rounds, p) = self.generate_batch(self.d, self.rounds_max, current_p, self.batch_size, self.mwpm_filter, self.chunking)
+            yield (chunked,), logical_errors, (rounds, p)
             
             # Increment local sample count after generating batch
             self.local_sample_count += 1

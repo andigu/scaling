@@ -34,6 +34,7 @@ source ~/.bashrc
 cd /n/home07/andigu/scale
 source .venv/bin/activate
 export PYTHONPATH=/n/home07/andigu/scale/src:$PYTHONPATH
+export NUMBA_CACHE_DIR=/tmp
 
 # Setup multi-node distributed environment variables for PyTorch Lightning
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)

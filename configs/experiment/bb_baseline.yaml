@@ -12,7 +12,7 @@ model:
   architecture: rgcn50
   embedding_dim: 128
   channel_multipliers: [2, 4, 8, 16]
-  num_relations: 36  # 12 edge types * 3 temporal connections
+  # num_relations: auto-inferred from dataset
 
 experiment:
   name: bb_baseline

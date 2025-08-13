@@ -170,12 +170,30 @@ class ResNet3DTrainer(L.LightningModule):
         
         # Create model based on architecture
         if cfg.model.architecture.startswith('rgcn'):
+            # For RGCN, infer num_relations and num_logical_qubits from dataset
+            dataset_class = get_dataset_class(cfg)
+            if hasattr(dataset_class, '__name__') and 'BivariateBicycle' in dataset_class.__name__:
+                # Create a temporary dataset instance to get num_relations and num_logical_qubits
+                temp_dataset = dataset_class(
+                    l=cfg.dataset.l,
+                    m=cfg.dataset.m,
+                    rounds_max=cfg.dataset.rounds_max,
+                    p=cfg.dataset.p,
+                    batch_size=1  # Minimal size for initialization
+                )
+                num_relations = temp_dataset.get_num_relations()
+                num_logical_qubits = temp_dataset.get_num_logical_qubits()
+            else:
+                num_relations = cfg.model.get('num_relations', 12)  # Fallback
+                num_logical_qubits = 1  # Default for surface codes
+            
             self.model = RGCN(
                 architecture=cfg.model.architecture,
                 embedding_dim=cfg.model.embedding_dim,
                 channel_multipliers=cfg.model.get('channel_multipliers', None),
                 use_lstm=cfg.model.get('use_lstm', False),
-                num_relations=cfg.model.get('num_relations', 12)
+                num_relations=num_relations,
+                num_logical_qubits=num_logical_qubits
             )
         else:  # ResNet architectures
             self.model = ResNet3D(
@@ -207,14 +225,11 @@ class ResNet3DTrainer(L.LightningModule):
         return self.model(*args, **kwargs)
 
     def training_step(self, batch, batch_idx):
-        if self.cfg.model.architecture.startswith('rgcn'):
-            # RGCN input: x, y, (edge_index, edge_attr), (t, p_err)
-            x, y, (edge_index, edge_attr), (t, p_err) = batch
-            pred = self.model(x, edge_index, edge_attr)
-        else:
-            # ResNet3D input: x, y, (t, p_err)
-            x, y, (t, p_err) = batch
-            pred = self.model(x)
+        # Unified format: (input1, input2, ...), y, (t, p_err)
+        x, y, (t, p_err) = batch
+        
+        # Forward pass with unpacked inputs
+        pred = self.model(*x)
         
         loss = F.binary_cross_entropy_with_logits(pred, y)
         
@@ -248,9 +263,13 @@ class ResNet3DTrainer(L.LightningModule):
         return loss
     
     def configure_optimizers(self):
-        #optimizer = schedulefree.RAdamScheduleFree(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        #optimizer.train()
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        if self.cfg.training.optimizer == 'schedulefree':
+            optimizer = schedulefree.RAdamScheduleFree(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            optimizer.train()
+        elif self.cfg.training.optimizer == 'adamw':
+            optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        else:
+            raise ValueError(f"Unknown optimizer: {self.cfg.training.optimizer}. Must be 'adamw' or 'schedulefree'")
         return optimizer
     
     def state_dict(self):
@@ -320,6 +339,7 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, num_d
             'channel_multipliers': cfg.model.get('channel_multipliers', [2, 4, 8, 16]),
             'lr': cfg.training.lr,
             'weight_decay': cfg.training.weight_decay,
+            'optimizer': cfg.training.optimizer,
             'gradient_clip_val': cfg.training.get('gradient_clip_val', None),
             'gradient_clip_algorithm': cfg.training.get('gradient_clip_algorithm', 'norm'),
             'accumulate_grad_batches': cfg.training.accumulate_grad_batches,
@@ -379,6 +399,7 @@ def train_experiment(cfg: DictConfig):
     log.info(f"Embedding Dim: {cfg.model.embedding_dim}")
     log.info(f"Learning Rate: {cfg.training.lr}")
     log.info(f"Weight Decay: {cfg.training.weight_decay}")
+    log.info(f"Optimizer: {cfg.training.optimizer}")
     log.info(f"Gradient Clip Val: {cfg.training.get('gradient_clip_val', None)}")
     log.info(f"Gradient Clip Algorithm: {cfg.training.get('gradient_clip_algorithm', 'norm')}")
     log.info(f"Accumulate Grad Batches: {cfg.training.accumulate_grad_batches}")
@@ -386,7 +407,21 @@ def train_experiment(cfg: DictConfig):
     
     # Log model-specific parameters
     if cfg.model.architecture.startswith('rgcn'):
-        log.info(f"Num Relations: {cfg.model.get('num_relations', 12)}")
+        # Get num_relations and num_logical_qubits from dataset for logging
+        dataset_class = get_dataset_class(cfg)
+        if hasattr(dataset_class, '__name__') and 'BivariateBicycle' in dataset_class.__name__:
+            temp_dataset = dataset_class(
+                l=cfg.dataset.l,
+                m=cfg.dataset.m,
+                rounds_max=cfg.dataset.rounds_max,
+                p=cfg.dataset.p,
+                batch_size=1
+            )
+            log.info(f"Num Relations: {temp_dataset.get_num_relations()}")
+            log.info(f"Num Logical Qubits: {temp_dataset.get_num_logical_qubits()}")
+        else:
+            log.info(f"Num Relations: {cfg.model.get('num_relations', 12)}")
+            log.info(f"Num Logical Qubits: 1")
     else:
         log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")
         log.info(f"Stage4 Stride: {cfg.model.stage4_stride}")

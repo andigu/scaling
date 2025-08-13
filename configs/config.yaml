@@ -36,13 +36,14 @@ model:
   use_lstm: false          # LSTM for temporal processing
   
   # RGCN specific parameters (ignored for ResNet3D)
-  num_relations: 12        # Number of edge types in graph
+  # num_relations: auto-inferred from dataset
 
 # Training parameters
 training:
   batch_size: null       # Manual batch size override (null = auto-tune)
   lr: 3e-4               # Learning rate (main sweep target)
   weight_decay: 0.0      # Weight decay for regularization (reasonable range: 1e-4 to 5e-4)
+  optimizer: adamw       # Optimizer choice: adamw or schedulefree
   max_steps: 50000       # Maximum training steps
   log_every_n_steps: 100 # Logging frequency
   checkpoint_every_minutes: 15  # Checkpoint frequency in minutes

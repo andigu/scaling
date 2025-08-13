@@ -31,7 +31,7 @@ import glob
 # Import from existing modules
 from resnet import ResNet3D
 from data_module import SurfaceCodeDataModule  
-from dataset import EMA
+from train import EMA
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -54,7 +54,7 @@ class SimpleConfig:
         self.dataset = SimpleNamespace(
             d=d,
             p=2.1,
-            rounds_max=d,
+            rounds_max=9,
             mwpm_filter=False,
             chunking=(1, 1, 1)
         )
@@ -146,7 +146,7 @@ class SimpleResNet3DTrainer(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y, (t, p_err) = batch
-        pred = self(x)
+        pred = self(*x)
         loss = F.binary_cross_entropy_with_logits(pred, y)
         
         # Track metrics

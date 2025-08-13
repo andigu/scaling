@@ -30,4 +30,5 @@ dependencies = [
     "hydra-colorlog>=1.2.0",
     "numba==0.61.2",
     "galois>=0.4.6",
+    "ninja>=1.13.0",
 ]

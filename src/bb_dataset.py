@@ -1,4 +1,4 @@
-from simulate import Algorithm, BivariateBicycle, NoiseModel, CodeFactory, StimSimulator
+from simulate import Algorithm, BivariateBicycle, NoiseModel, CodeFactory, StimSimulator, LogicalCircuit
 import pandas as pd
 import numpy as np
 import torch
@@ -19,7 +19,7 @@ class BivariateBicycleDataset(IterableDataset):
     """
     
     def __init__(self, l=6, m=6, rounds_max=9, p=2.0, batch_size=32, 
-                 stage_manager=None, num_workers=8, global_step_offset=0):
+                 stage_manager=None, num_workers=8, global_step_offset=0, **kwargs):
         """
         Args:
             l: BB code parameter l
@@ -43,6 +43,21 @@ class BivariateBicycleDataset(IterableDataset):
         
         # Track local worker sample count (will be set in each worker)
         self.local_sample_count = 0
+        
+        # Build static code graph structure (independent of rounds)
+        self._static_graph_structure = self._build_static_graph_structure()
+    
+    def get_num_relations(self):
+        """Get the total number of relation types (static + temporal)."""
+        num_static_edge_types = len(self._static_graph_structure['all_edge_types'])
+        return num_static_edge_types * 3  # 3 for temporal connections [-1, 0, 1]
+    
+    def get_num_logical_qubits(self):
+        """Get the number of logical qubits encoded by this BB code."""
+        # logical_operators is a numpy structured array with fields: logical_id, logical_pauli, data_id, physical_pauli
+        # logical_id goes from 0 to k-1 where k is the number of logical qubits
+        logical_ops = self._static_graph_structure['metadata'].logical_operators
+        return np.max(logical_ops['logical_id']) + 1
     
     def _estimate_global_step(self) -> int:
         """Estimate current global step from worker-local sample count."""
@@ -56,13 +71,10 @@ class BivariateBicycleDataset(IterableDataset):
         else:
             return self.default_p
     
-    @staticmethod
-    @lru_cache(maxsize=32)
-    def _build_graph_structure(l, m, rounds):
-        """Build the graph structure for the BB code with given l, m, rounds."""
-        # Create BB code circuit and metadata
-        alg = Algorithm.build_memory(cycles=rounds)
-        cf = CodeFactory(BivariateBicycle, {'l': l, 'm': m})
+    def _build_static_graph_structure(self):
+        """Build the static BB code graph structure (independent of rounds)."""
+        # Create BB code metadata
+        cf = CodeFactory(BivariateBicycle, {'l': self.l, 'm': self.m})
         metadata = cf().metadata
         
         # Build tanner graph - this creates edges between checks and data
@@ -83,16 +95,25 @@ class BivariateBicycleDataset(IterableDataset):
         
         graph_df = pd.DataFrame(graph_edges, columns=['syndrome_id', 'neighbor_syndrome_id', 'edge_type'])
         
-        # Build detector-level graph with temporal connections
-        det = pd.DataFrame(metadata.detectors if hasattr(metadata, 'detectors') else [])
-        if len(det) == 0:
-            # Fallback: create detector metadata from check metadata
-            check = pd.DataFrame(metadata.check)
-            det = pd.DataFrame({
-                'detector_id': np.arange(len(check) * (rounds + 1)),
-                'syndrome_id': np.tile(check['check_id'], rounds + 1),
-                'time': np.repeat(np.arange(rounds + 1), len(check))
-            })
+        return {
+            'graph_df': graph_df,
+            'all_edge_types': all_edge_types,
+            'metadata': metadata
+        }
+    
+    def _build_spatiotemporal_graph_structure(self, rounds, mt):
+        """Build the spatiotemporal graph structure using the static graph and temporal connections.
+        
+        Args:
+            rounds: Number of error correction rounds
+            mt: MeasurementTracker from the LogicalCircuit (contains detector metadata)
+        """
+        # Use pre-computed static structure
+        graph_df = self._static_graph_structure['graph_df']
+        all_edge_types = self._static_graph_structure['all_edge_types']
+        
+        # Get actual detector metadata from measurement tracker
+        det = pd.DataFrame(mt.detectors)
         
         det_graph = det.merge(graph_df, on='syndrome_id').merge(
             det, left_on='neighbor_syndrome_id', right_on='syndrome_id', suffixes=('', '_nb')
@@ -126,6 +147,7 @@ class BivariateBicycleDataset(IterableDataset):
         # Create BB code circuit
         alg = Algorithm.build_memory(cycles=rounds)
         cf = CodeFactory(BivariateBicycle, {'l': l, 'm': m})
+        lc, _, mt = LogicalCircuit.from_algorithm(alg, cf)
         noise_model = NoiseModel.get_scaled_noise_model(p).without_loss()
         sim = StimSimulator(alg, noise_model, cf, seed=np.random.randint(0, 2**48))
         
@@ -134,7 +156,7 @@ class BivariateBicycleDataset(IterableDataset):
         detectors = results.detectors
         logical_errors = results.logical_errors
         
-        return detectors, logical_errors, (rounds, p)
+        return detectors, logical_errors, (rounds, p), mt
     
     def __iter__(self):
         """Generate infinite stream of bivariate bicycle code data batches."""
@@ -153,15 +175,16 @@ class BivariateBicycleDataset(IterableDataset):
             current_p = self.get_current_p()
             
             # Generate batch with current curriculum p value
-            detectors, logical_errors, (rounds, p) = self.generate_batch(
+            detectors, logical_errors, (rounds, p), mt = self.generate_batch(
                 self.l, self.m, self.rounds_max, current_p, self.batch_size
             )
-            graph_structure = self._build_graph_structure(self.l, self.m, rounds)
+            graph_structure = self._build_spatiotemporal_graph_structure(rounds, mt)
             edge_indices, edge_types = graph_structure['edge_index'], graph_structure['edge_attr'] # (2, |E|), (|E|, )
-            num_nodes = detectors.shape[1]
-            edge_indices = (edge_indices[..., None] + np.arange(self.batch_size)[None, None, :] * num_nodes).reshape((2, -1))
-            edge_types = np.repeat(edge_types[:, None], self.batch_size, axis=1).reshape(-1)
-            yield detectors.astype(np.int32), logical_errors.astype(np.float32), (edge_indices, edge_types), (rounds, p)
+            batch_size, num_nodes = detectors.shape
+            edge_indices = (edge_indices[..., None] + np.arange(batch_size)[None, None, :] * num_nodes).reshape((2, -1)).astype(np.int32)
+            edge_types = np.repeat(edge_types[:, None], batch_size, axis=1).reshape(-1).astype(np.int32)
+            detectors = detectors.astype(np.int32)
+            yield (detectors, edge_indices, edge_types), np.squeeze(logical_errors.astype(np.float32), axis=1), (rounds, p)
 
             # Increment local sample count after generating batch
             self.local_sample_count += 1

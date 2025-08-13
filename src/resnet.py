@@ -165,7 +165,7 @@ class ResNet3D(nn.Module):
             
         return BottleneckBlock(layers, skip)
     
-    def forward(self, x):
+    def forward(self, x, *args, **kwargs):
         # Input: (batch, time, height, width)
         embedding = self.embedding(x)
         embedding = torch.permute(embedding, (0, 4, 1, 2, 3))  # (batch, embedding_dim, time, height, width)

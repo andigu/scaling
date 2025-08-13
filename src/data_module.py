@@ -142,16 +142,21 @@ class CodeDataModule(L.LightningDataModule):
             
             log.debug(f"Worker {worker_id} (node {node_rank}, local_rank {local_rank}, global_rank {global_rank}) initialized with seed {worker_seed}")
         
-        return DataLoader(
-            self.train_dataset,
-            batch_size=None,  # Dataset handles batching internally
-            shuffle=False,    # Not needed for infinite dataset
-            num_workers=self.cfg.hardware.num_workers,
-            pin_memory=True,
-            prefetch_factor=self.cfg.hardware.prefetch_factor,
-            persistent_workers=self.cfg.hardware.persistent_workers,
-            worker_init_fn=worker_init_fn
-        )
+        # Build dataloader kwargs based on num_workers
+        dataloader_kwargs = {
+            'batch_size': None,  # Dataset handles batching internally
+            'shuffle': False,    # Not needed for infinite dataset
+            'num_workers': self.cfg.hardware.num_workers,
+            'pin_memory': True,
+            'worker_init_fn': worker_init_fn
+        }
+        
+        # Only add multiprocessing-specific args if num_workers > 0
+        if self.cfg.hardware.num_workers > 0:
+            dataloader_kwargs['prefetch_factor'] = self.cfg.hardware.prefetch_factor
+            dataloader_kwargs['persistent_workers'] = self.cfg.hardware.persistent_workers
+        
+        return DataLoader(self.train_dataset, **dataloader_kwargs)
     
     def update_global_step_offset(self, global_step: int):
         """
