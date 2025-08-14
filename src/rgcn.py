@@ -59,7 +59,7 @@ class RGCN(nn.Module):
         self.channel_multipliers = channel_multipliers
         
         # Input embedding layer for detector states (0, 1 detectors)
-        self.embedding = nn.Embedding(2, embedding_dim, padding_idx=0)
+        self.embedding = nn.Embedding(500, embedding_dim)
         
         # Build stages with calculated channel counts
         self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0])
@@ -80,9 +80,6 @@ class RGCN(nn.Module):
             nn.GELU(),
             nn.Linear(2*embedding_dim, num_logical_qubits)
         )
-
-        self.embed_m = nn.Parameter(torch.randn(1000, embedding_dim))
-        self.embed_b = nn.Parameter(torch.randn(1000, embedding_dim))
     
     def _make_stage(self, in_channels, out_channels, num_blocks):
         blocks = []
@@ -154,10 +151,7 @@ class RGCN(nn.Module):
         # Infer batch dimensions
         batch_size, num_nodes = x.shape
         
-        # x = self.embedding(x) # (bs, num_nodes, embed dim)
-        embed_m, embed_b = self.embed_m[:num_nodes], self.embed_b[:num_nodes]
-        
-        x = (2*x[...,None]-1)/math.sqrt(2) * embed_m[None,...] + embed_b[None,...]  # (bs, num_nodes, embed dim)
+        x = self.embedding(x) # (bs, num_nodes, embed dim)
         
         # Pass through RGCN stages with batch-aware processing
         x = self._forward_stage(self.stage1, x, graph)
