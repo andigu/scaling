@@ -17,7 +17,7 @@ class RGCN(nn.Module):
     }
     
     def __init__(self, layers=None, embedding_dim=128, architecture='rgcn50', 
-                 use_lstm=False, channel_multipliers=None, neighborhood_size=66, num_logical_qubits=1, num_embeddings=None):
+                 use_lstm=False, channel_multipliers=None, static_graph=None, num_logical_qubits=1, num_embeddings=None):
         """
         Args:
             layers: List of integers specifying blocks per stage [stage1, stage2, stage3, stage4]
@@ -25,13 +25,22 @@ class RGCN(nn.Module):
             architecture: String key for predefined architectures ('rgcn18', 'rgcn34', etc.)
             use_lstm: Whether to use LSTM for temporal processing
             channel_multipliers: List of 4 multipliers for channel expansion [stage1, stage2, stage3, stage4]
-            neighborhood_size: Size of the neighborhood for graph convolutions
+            static_graph: Static graph structure (required) - shape (num_nodes, neighborhood_size, 3)
             num_logical_qubits: Number of logical qubits to predict (output dimension)
             num_embeddings: Number of embeddings (mandatory)
         """
         super().__init__()
+        
+        if static_graph is None:
+            raise ValueError("static_graph is required for RGCN")
+        
+        # Extract neighbors from graph structure: graph[..., 1] contains neighbor indices
+        # Derive neighborhood_size from the graph shape
+        self.neighborhood_size = static_graph.shape[1]
+        static_neighbors = torch.tensor(static_graph[..., 1], dtype=torch.long)
+        self.register_buffer('static_neighbors', static_neighbors)
+        
         self.embedding_dim = embedding_dim
-        self.neighborhood_size = neighborhood_size
         self.num_logical_qubits = num_logical_qubits
         
         # Use provided layers or lookup from architecture
@@ -142,25 +151,24 @@ class RGCN(nn.Module):
             
         return RGCNBlock(layers, skip, use_bottleneck=False)
     
-    def forward(self, x, graph):
+    def forward(self, x):
         """
         Args:
             x: Node features (batch_size, num_nodes)
-            edge_index: Edge connectivity (2, num_edges)  
-            edge_attr: Edge types (num_edges,)
         """
-        # Debug logging
-        
         # Infer batch dimensions
         batch_size, num_nodes = x.shape
         
         x = self.embedding(x) # (bs, num_nodes, embed dim)
         
+        # Use pre-registered static neighbors
+        neighbors = self.static_neighbors
+        
         # Pass through RGCN stages with batch-aware processing
-        x = self._forward_stage(self.stage1, x, graph)
-        x = self._forward_stage(self.stage2, x, graph)
-        x = self._forward_stage(self.stage3, x, graph)
-        x = self._forward_stage(self.stage4, x, graph)
+        x = self._forward_stage(self.stage1, x, neighbors)
+        x = self._forward_stage(self.stage2, x, neighbors)
+        x = self._forward_stage(self.stage3, x, neighbors)
+        x = self._forward_stage(self.stage4, x, neighbors)
 
         # x is now (batch_size, num_nodes, features)
         # Reduce channels back to embedding_dim
@@ -178,45 +186,45 @@ class RGCN(nn.Module):
             
             return self.project(x)
 
-    def _forward_stage(self, stage, x, graph):
+    def _forward_stage(self, stage, x, neighbors):
         """Forward through a stage of RGCN blocks."""
         for block in stage:
-            x = block(x, graph)
+            x = block(x, neighbors)
         return x
     
     @classmethod
-    def rgcn18(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
+    def rgcn18(cls, embedding_dim=128, channel_multipliers=None, static_graph=None, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN18 variant."""
         return cls(architecture='rgcn18', embedding_dim=embedding_dim, 
-                  channel_multipliers=channel_multipliers, num_relations=num_relations,
+                  channel_multipliers=channel_multipliers, static_graph=static_graph,
                   num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
     @classmethod
-    def rgcn34(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
+    def rgcn34(cls, embedding_dim=128, channel_multipliers=None, static_graph=None, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN34 variant."""
         return cls(architecture='rgcn34', embedding_dim=embedding_dim,
-                  channel_multipliers=channel_multipliers, num_relations=num_relations,
+                  channel_multipliers=channel_multipliers, static_graph=static_graph,
                   num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
     @classmethod
-    def rgcn50(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
+    def rgcn50(cls, embedding_dim=128, channel_multipliers=None, static_graph=None, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN50 variant."""
         return cls(architecture='rgcn50', embedding_dim=embedding_dim,
-                  channel_multipliers=channel_multipliers, num_relations=num_relations,
+                  channel_multipliers=channel_multipliers, static_graph=static_graph,
                   num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
     
     @classmethod
-    def rgcn101(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
+    def rgcn101(cls, embedding_dim=128, channel_multipliers=None, static_graph=None, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN101 variant."""
         return cls(architecture='rgcn101', embedding_dim=embedding_dim,
-                  channel_multipliers=channel_multipliers, num_relations=num_relations,
+                  channel_multipliers=channel_multipliers, static_graph=static_graph,
                   num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
     @classmethod
-    def rgcn152(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
+    def rgcn152(cls, embedding_dim=128, channel_multipliers=None, static_graph=None, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN152 variant."""
         return cls(architecture='rgcn152', embedding_dim=embedding_dim,
-                  channel_multipliers=channel_multipliers, num_relations=num_relations,
+                  channel_multipliers=channel_multipliers, static_graph=static_graph,
                   num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
 
@@ -229,12 +237,16 @@ class RGCNBlock(nn.Module):
         self.skip_path = skip_path
         self.use_bottleneck = use_bottleneck
     
-    def forward(self, x, graph):
-        """Forward with batch-aware processing for BatchNorm."""
+    def forward(self, x, neighbors):
+        """Forward with batch-aware processing for BatchNorm.
+        
+        Args:
+            x: Node features (batch_size, num_nodes, features)
+            neighbors: Pre-extracted neighbor indices from static graph
+        """
         # x: (batch_size, num_nodes, features)
         identity = x
         batch_size, num_nodes, features = x.shape
-        neighbors = graph[..., 1]
         if self.use_bottleneck:
             # Bottleneck: norm -> linear -> norm -> rgcn -> norm -> linear
             
@@ -297,10 +309,9 @@ class RGCNBlock(nn.Module):
             out = self.layers['rgcn2'](out[:, neighbors].flatten(start_dim=2))
         
         # Apply skip connection
-        if not isinstance(self.skip_path, nn.Identity):
-            # Need to handle skip path for batched data
-            identity_flat = identity.reshape(-1, features)
-            identity_flat = self.skip_path(identity_flat)
-            identity = identity_flat.reshape(batch_size, num_nodes, -1)
+        # Always apply skip_path (it's either Identity or Linear)
+        identity_flat = identity.reshape(-1, features)
+        identity_flat = self.skip_path(identity_flat)
+        identity = identity_flat.reshape(batch_size, num_nodes, -1)
         
         return out + identity

@@ -41,7 +41,7 @@ model:
   compile:
     enabled: false         # Enable torch.compile for performance optimization
     mode: "default"        # Compilation mode: "default", "reduce-overhead", "max-autotune"
-    fullgraph: false       # Compile as single graph (stricter but potentially faster)
+    fullgraph: true       # Compile as single graph (stricter but potentially faster)
     dynamic: null          # Dynamic shape support (null=auto, true/false for explicit)
 
 # Training parameters

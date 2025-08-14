@@ -95,15 +95,14 @@ class TemporalSurfaceCodeDataset(IterableDataset):
 
         # Populate detector array
         time, x, y = det['time'].values, det['pos_x'].values, det['pos_y'].values
-        det_id = det['detector_id'].values[None,:]
+        det_id = det['syndrome_id'].values[None,:]
         det_value = detectors[:, det['detector_id']] * (det_id.max()+1) + det_id
         det_array[:, time, x, y] = (det_value + 1)
 
         return det_array, logical_errors.astype(np.float32), (rounds, p)
     
     def get_num_embeddings(self):
-        num_detectors = round((self.d**2 - 1)*(self.rounds+0.5)) # +1 for 0 as padding idx
-        return 2*num_detectors+1
+        return 2*(self.d**2 - 1)+1
         
     def __iter__(self):
         """Generate infinite stream of surface code data batches."""
@@ -127,7 +126,7 @@ class TemporalSurfaceCodeDataset(IterableDataset):
             
             # Generate batch with current curriculum p value
             det_array, logical_errors, (rounds, p) = self.generate_batch(self.d, self.rounds, current_p, self.batch_size, self.mwpm_filter)
-            yield (det_array,), logical_errors, (str(rounds), p)
+            yield det_array, logical_errors, (str(rounds), p)
             
             # Increment local sample count after generating batch
             self.local_sample_count += 1

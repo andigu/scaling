@@ -183,7 +183,6 @@ class ResNet3DTrainer(L.LightningModule):
                     p=cfg.dataset.p,
                     batch_size=1  # Minimal size for initialization
                 )
-                neighborhood_size = temp_dataset.get_neighborhood_size()
                 num_logical_qubits = temp_dataset.get_num_logical_qubits()
                 num_embeddings = temp_dataset.get_num_embeddings()
             else:
@@ -195,16 +194,20 @@ class ResNet3DTrainer(L.LightningModule):
                     batch_size=1,
                     mwpm_filter=cfg.dataset.mwpm_filter
                 )
-                neighborhood_size = cfg.model.get('neighborhood_size', 12)  # Fallback
                 num_logical_qubits = 1  # Default for surface codes
                 num_embeddings = temp_dataset.get_num_embeddings()
+            
+            # Get static graph structure (required for RGCN)
+            if not hasattr(temp_dataset, 'get_graph'):
+                raise ValueError("BivariateBicycleDataset must have get_graph method for RGCN")
+            static_graph = temp_dataset.get_graph()
             
             self.model = RGCN(
                 architecture=cfg.model.architecture,
                 embedding_dim=cfg.model.embedding_dim,
                 channel_multipliers=cfg.model.get('channel_multipliers', None),
                 use_lstm=cfg.model.get('use_lstm', False),
-                neighborhood_size=neighborhood_size,
+                static_graph=static_graph,
                 num_logical_qubits=num_logical_qubits,
                 num_embeddings=num_embeddings
             )
@@ -244,9 +247,15 @@ class ResNet3DTrainer(L.LightningModule):
             compile_mode = compile_config.get('mode', 'default')
             compile_fullgraph = compile_config.get('fullgraph', False)
             compile_dynamic = compile_config.get('dynamic', None)
-            
+
+            # Increase cache size limit to handle batch size tuning recompilations
+            # Each batch size will trigger a recompile if dynamic=False
+            import torch._dynamo
+            torch._dynamo.config.cache_size_limit = 64  # Default is 8, increase to handle batch size search
+
             log.info(f"Compiling model with mode='{compile_mode}', fullgraph={compile_fullgraph}, dynamic={compile_dynamic}")
-            
+            log.info(f"Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations")
+
             compile_kwargs = {
                 'mode': compile_mode,
                 'fullgraph': compile_fullgraph
@@ -277,11 +286,9 @@ class ResNet3DTrainer(L.LightningModule):
         return self.model(*args, **kwargs)
 
     def training_step(self, batch, batch_idx):
-        # Unified format: (input1, input2, ...), y, (t, p_err)
+        # Unified format: x (single tensor or tuple), y, (t, p_err)
         x, y, (t_str, p_err) = batch
-        
-        # Forward pass with unpacked inputs
-        pred = self.model(*x)
+        pred = self.model(x)
         
         loss = F.binary_cross_entropy_with_logits(pred, y)
         
@@ -670,7 +677,7 @@ def train_experiment(cfg: DictConfig):
                 model.reset_metrics()
                 
                 # Use tuned batch size
-                batch_size = math.floor(temp_data_module.batch_size * 0.925)
+                batch_size = max(math.floor(temp_data_module.batch_size * 0.9), temp_data_module.batch_size-30)
                 
                 # Save batch size for other ranks
                 batch_size_file.write_text(str(batch_size))
@@ -721,7 +728,11 @@ def train_experiment(cfg: DictConfig):
                     effective_batch_size=effective_batch_size
                 )
     if wandb_logger:
-        wandb_logger.watch(model.model, log="all")
+        # Don't watch model if torch.compile is enabled (incompatible)
+        if not cfg.model.get('compile', {}).get('enabled', False):
+            wandb_logger.watch(model.model, log="all")
+        else:
+            log.info("Skipping wandb.watch() due to torch.compile compatibility")
         
         # Log batch size info to wandb (regardless of how it was determined)
         effective_batch_size = batch_size * num_devices * cfg.hardware.num_nodes * cfg.training.accumulate_grad_batches
