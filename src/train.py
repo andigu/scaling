@@ -181,10 +181,10 @@ class ResNet3DTrainer(L.LightningModule):
                     p=cfg.dataset.p,
                     batch_size=1  # Minimal size for initialization
                 )
-                num_relations = temp_dataset.get_num_relations()
+                neighborhood_size = temp_dataset.get_neighborhood_size()
                 num_logical_qubits = temp_dataset.get_num_logical_qubits()
             else:
-                num_relations = cfg.model.get('num_relations', 12)  # Fallback
+                neighborhood_size = cfg.model.get('neighborhood_size', 12)  # Fallback
                 num_logical_qubits = 1  # Default for surface codes
             
             self.model = RGCN(
@@ -192,7 +192,7 @@ class ResNet3DTrainer(L.LightningModule):
                 embedding_dim=cfg.model.embedding_dim,
                 channel_multipliers=cfg.model.get('channel_multipliers', None),
                 use_lstm=cfg.model.get('use_lstm', False),
-                num_relations=num_relations,
+                neighborhood_size=neighborhood_size,
                 num_logical_qubits=num_logical_qubits
             )
         else:  # ResNet architectures
@@ -412,14 +412,13 @@ def train_experiment(cfg: DictConfig):
             temp_dataset = dataset_class(
                 l=cfg.dataset.l,
                 m=cfg.dataset.m,
-                rounds_max=cfg.dataset.rounds_max,
+                rounds_list=cfg.dataset.rounds_list,
                 p=cfg.dataset.p,
                 batch_size=1
             )
-            log.info(f"Num Relations: {temp_dataset.get_num_relations()}")
+            log.info(f"Num Relations: {temp_dataset.get_neighborhood_size()}")
             log.info(f"Num Logical Qubits: {temp_dataset.get_num_logical_qubits()}")
         else:
-            log.info(f"Num Relations: {cfg.model.get('num_relations', 12)}")
             log.info(f"Num Logical Qubits: 1")
     else:
         log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")

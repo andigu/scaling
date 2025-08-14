@@ -1,11 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import CuGraphRGCNConv
 import numpy as np
-from torch_geometric import EdgeIndex
-from torch.cuda.amp import autocast
-
 
 class RGCN(nn.Module):
     """RGCN-based model for bivariate bicycle codes, mirroring ResNet3D structure."""
@@ -20,7 +16,7 @@ class RGCN(nn.Module):
     }
     
     def __init__(self, layers=None, embedding_dim=128, architecture='rgcn50', 
-                 use_lstm=False, channel_multipliers=None, num_relations=44, num_logical_qubits=1):
+                 use_lstm=False, channel_multipliers=None, neighborhood_size=66, num_logical_qubits=1):
         """
         Args:
             layers: List of integers specifying blocks per stage [stage1, stage2, stage3, stage4]
@@ -28,12 +24,12 @@ class RGCN(nn.Module):
             architecture: String key for predefined architectures ('rgcn18', 'rgcn34', etc.)
             use_lstm: Whether to use LSTM for temporal processing
             channel_multipliers: List of 4 multipliers for channel expansion [stage1, stage2, stage3, stage4]
-            num_relations: Number of relation types in the graph
+            neighborhood_size: Size of the neighborhood for graph convolutions
             num_logical_qubits: Number of logical qubits to predict (output dimension)
         """
         super().__init__()
         self.embedding_dim = embedding_dim
-        self.num_relations = num_relations
+        self.neighborhood_size = neighborhood_size
         self.num_logical_qubits = num_logical_qubits
         
         # Use provided layers or lookup from architecture
@@ -111,7 +107,7 @@ class RGCN(nn.Module):
             'norm1': nn.BatchNorm1d(in_channels),
             'linear1': nn.Linear(in_channels, mid_channels),
             'norm2': nn.BatchNorm1d(mid_channels), 
-            'rgcn': CuGraphRGCNConv(mid_channels, mid_channels, num_relations=self.num_relations),
+            'rgcn': nn.Linear(mid_channels*self.neighborhood_size, mid_channels),
             'norm3': nn.BatchNorm1d(mid_channels),
             'linear2': nn.Linear(mid_channels, out_channels)
         })
@@ -129,9 +125,9 @@ class RGCN(nn.Module):
         
         layers = nn.ModuleDict({
             'norm1': nn.BatchNorm1d(in_channels),
-            'rgcn1': CuGraphRGCNConv(in_channels, out_channels, num_relations=self.num_relations),
+            'rgcn1': nn.Linear(in_channels*self.neighborhood_size, out_channels),
             'norm2': nn.BatchNorm1d(out_channels),
-            'rgcn2': CuGraphRGCNConv(out_channels, out_channels, num_relations=self.num_relations)
+            'rgcn2': nn.Linear(out_channels*self.neighborhood_size, out_channels)
         })
         
         # Skip connection with optional dimension matching
@@ -142,7 +138,7 @@ class RGCN(nn.Module):
             
         return RGCNBlock(layers, skip, use_bottleneck=False)
     
-    def forward(self, x, edge_index, edge_attr):
+    def forward(self, x, graph):
         """
         Args:
             x: Node features (batch_size, num_nodes)
@@ -153,19 +149,15 @@ class RGCN(nn.Module):
         
         # Infer batch dimensions
         batch_size, num_nodes = x.shape
-        edge_index = EdgeIndex(edge_index)
         
-        # Embed first while keeping batch structure: (batch_size, num_nodes) -> (batch_size, num_nodes, embedding_dim)
-        x_flat = x.flatten()  # Temporarily flatten for embedding lookup
-        x = self.embedding(x_flat)  # (total_nodes, embedding_dim)
-        x = x.reshape(batch_size, num_nodes, -1)  # Reshape back: (batch_size, num_nodes, embedding_dim)
+        x = self.embedding(x) # (bs, num_nodes, embed dim)
         
         # Pass through RGCN stages with batch-aware processing
-        x = self._forward_stage_with_batch(self.stage1, x, edge_index, edge_attr, batch_size, num_nodes)
-        x = self._forward_stage_with_batch(self.stage2, x, edge_index, edge_attr, batch_size, num_nodes)  
-        x = self._forward_stage_with_batch(self.stage3, x, edge_index, edge_attr, batch_size, num_nodes)
-        x = self._forward_stage_with_batch(self.stage4, x, edge_index, edge_attr, batch_size, num_nodes)
-        
+        x = self._forward_stage(self.stage1, x, graph)
+        x = self._forward_stage(self.stage2, x, graph)
+        x = self._forward_stage(self.stage3, x, graph)
+        x = self._forward_stage(self.stage4, x, graph)
+
         # x is now (batch_size, num_nodes, features)
         # Reduce channels back to embedding_dim
         x_flat = x.reshape(-1, x.size(-1))  # Flatten for linear: (batch_size * num_nodes, features)
@@ -181,18 +173,11 @@ class RGCN(nn.Module):
             x = x.mean(dim=1)
             
             return self.project(x)
-    
-    def _forward_stage(self, stage, x, edge_index, edge_attr):
+
+    def _forward_stage(self, stage, x, graph):
         """Forward through a stage of RGCN blocks."""
         for block in stage:
-            x = block(x, edge_index, edge_attr)
-        return x
-    
-    def _forward_stage_with_batch(self, stage, x, edge_index, edge_attr, batch_size, num_nodes):
-        """Forward through a stage with batch-aware processing."""
-        # x starts as (batch_size, num_nodes, features)
-        for block in stage:
-            x = block.forward_with_batch(x, edge_index, edge_attr, batch_size, num_nodes)
+            x = block(x, graph)
         return x
     
     @classmethod
@@ -240,42 +225,12 @@ class RGCNBlock(nn.Module):
         self.skip_path = skip_path
         self.use_bottleneck = use_bottleneck
     
-    def forward(self, x, edge_index, edge_attr):
-        identity = x
-        
-        if self.use_bottleneck:
-            # Bottleneck: norm -> linear -> norm -> rgcn -> norm -> linear
-            out = self.layers['norm1'](x)
-            out = F.gelu(out)
-            out = self.layers['linear1'](out)
-            
-            out = self.layers['norm2'](out)
-            out = F.gelu(out)
-            out = self.layers['rgcn'](out, edge_index, edge_attr)
-            
-            out = self.layers['norm3'](out)
-            out = F.gelu(out)
-            out = self.layers['linear2'](out)
-        else:
-            # Basic: norm -> rgcn -> norm -> rgcn
-            out = self.layers['norm1'](x)
-            out = F.gelu(out)
-            out = self.layers['rgcn1'](out, edge_index, edge_attr)
-            
-            out = self.layers['norm2'](out)
-            out = F.gelu(out)
-            out = self.layers['rgcn2'](out, edge_index, edge_attr)
-        
-        # Apply skip connection
-        identity = self.skip_path(identity)
-        
-        return out + identity
-    
-    def forward_with_batch(self, x, edge_index, edge_attr, batch_size, num_nodes):
+    def forward(self, x, graph):
         """Forward with batch-aware processing for BatchNorm."""
         # x: (batch_size, num_nodes, features)
-        features = x.size(-1)
         identity = x
+        batch_size, num_nodes, features = x.shape
+        neighbors = graph[..., 1]
         if self.use_bottleneck:
             # Bottleneck: norm -> linear -> norm -> rgcn -> norm -> linear
             
@@ -295,22 +250,13 @@ class RGCNBlock(nn.Module):
             # Second norm
             out = out.permute(0, 2, 1)
             out = self.layers['norm2'](out)
-            out = out.permute(0, 2, 1)
+            out = out.permute(0, 2, 1) # (batch size, num_nodes, features)
             out = F.gelu(out)
-            
-            # RGCN expects flattened nodes
-            out = out.reshape(-1, mid_features)  # Flatten for RGCN
-            # Disable autocast for CuGraphRGCNConv which doesn't support bf16
-            with autocast(enabled=False):
-                # Convert to fp32 for RGCN
-                out_fp32 = out.float()
-                edge_attr_fp32 = edge_attr.float() if edge_attr.dtype == torch.bfloat16 else edge_attr
-                out = self.layers['rgcn'](out_fp32, edge_index, edge_attr_fp32)
-                # Convert back to original dtype if needed
-                if out.dtype != out_fp32.dtype:
-                    out = out.to(dtype=out_fp32.dtype)
-            out = out.reshape(batch_size, num_nodes, -1)  # Reshape back
-            
+
+            out = F.pad(out, (0,0,0,1,0,0)) # add a dummy node with zeros
+            # bs, num_nodes+1, features
+            out = self.layers['rgcn'](out[:, neighbors].flatten(start_dim=2))
+
             # Third norm
             out = out.permute(0, 2, 1)
             out = self.layers['norm3'](out)
@@ -331,17 +277,10 @@ class RGCNBlock(nn.Module):
             out = F.gelu(out)
             
             # First RGCN
-            out = out.reshape(-1, features)  # Flatten for RGCN
-            # Disable autocast for CuGraphRGCNConv which doesn't support bf16
-            with autocast(enabled=False):
-                out_fp32 = out.float()
-                edge_attr_fp32 = edge_attr.float() if edge_attr.dtype == torch.bfloat16 else edge_attr
-                out = self.layers['rgcn1'](out_fp32, edge_index, edge_attr_fp32)
-                if out.dtype != out_fp32.dtype:
-                    out = out.to(dtype=out_fp32.dtype)
-            new_features = out.size(-1)
-            out = out.reshape(batch_size, num_nodes, new_features)  # Reshape back
-            
+            out = F.pad(out, (0,0,0,1,0,0)) # add a dummy node with zeros
+            # bs, num_nodes+1, features
+            out = self.layers['rgcn1'](out[:, neighbors].flatten(start_dim=2))
+
             # Second norm
             out = out.permute(0, 2, 1)
             out = self.layers['norm2'](out)
@@ -349,15 +288,9 @@ class RGCNBlock(nn.Module):
             out = F.gelu(out)
             
             # Second RGCN
-            out = out.reshape(-1, new_features)
-            # Disable autocast for CuGraphRGCNConv which doesn't support bf16
-            with autocast(enabled=False):
-                out_fp32 = out.float()
-                edge_attr_fp32 = edge_attr.float() if edge_attr.dtype == torch.bfloat16 else edge_attr
-                out = self.layers['rgcn2'](out_fp32, edge_index, edge_attr_fp32)
-                if out.dtype != out_fp32.dtype:
-                    out = out.to(dtype=out_fp32.dtype)
-            out = out.reshape(batch_size, num_nodes, -1)
+            out = F.pad(out, (0,0,0,1,0,0)) # add a dummy node with zeros
+            # bs, num_nodes+1, features
+            out = self.layers['rgcn2'](out[:, neighbors].flatten(start_dim=2))
         
         # Apply skip connection
         if not isinstance(self.skip_path, nn.Identity):

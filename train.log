@@ -1203,3 +1203,314 @@
 [2025-08-13 19:44:42,161][__main__][INFO] - === STARTING TRAINING ===
 [2025-08-13 19:44:42,327][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=11, rounds_list=[11], p=2.1, batch_size=171
 [2025-08-13 19:44:42,327][data_module][INFO] - Dataset configured for curriculum learning
+[2025-08-13 22:03:51,532][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:03:51,532][__main__][INFO] - PID: 543545
+[2025-08-13 22:03:51,532][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:03:51,532][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:03:51,532][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:03:51,532][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:03:51,532][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:03:51,532][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:03:51,532][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:03:51,532][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:03:51,533][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:03:51,533][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:03:51,533][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:03:51,533][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:03:51,533][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:03:51,533][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:03:51,533][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:03:51,533][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:03:51,533][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:05:05,477][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:05:05,477][__main__][INFO] - PID: 544479
+[2025-08-13 22:05:05,477][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:05:05,477][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:05:05,477][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:05:05,477][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:05:05,477][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:05:05,477][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:05:05,477][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:05:05,477][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:05:05,477][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:05:05,477][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:05:05,478][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:05:05,478][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:05:05,478][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:05:05,478][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:05:05,478][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:05:05,478][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:05:05,478][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:06:17,702][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:06:17,702][__main__][INFO] - PID: 544906
+[2025-08-13 22:06:17,702][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:06:17,702][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:06:17,702][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:06:17,702][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:06:17,702][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:06:17,702][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:06:17,702][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:06:17,702][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:06:17,702][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:06:17,702][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:06:17,702][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:06:17,703][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:06:17,703][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:06:17,703][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:06:17,703][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:06:17,703][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:06:17,703][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:06:18,387][__main__][INFO] - Num Relations: 66
+[2025-08-13 22:06:18,387][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-13 22:06:18,387][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds_list=[6], p=0.5
+[2025-08-13 22:06:18,387][__main__][INFO] - Standard training (no curriculum)
+[2025-08-13 22:06:18,387][__main__][INFO] - Accelerator: auto
+[2025-08-13 22:06:18,387][__main__][INFO] - Devices per node: auto
+[2025-08-13 22:06:18,388][__main__][INFO] - Num Nodes: 1
+[2025-08-13 22:06:18,388][__main__][INFO] - Total Devices: 1
+[2025-08-13 22:06:18,388][__main__][INFO] - Strategy: auto
+[2025-08-13 22:06:18,388][__main__][INFO] - Sync BatchNorm: True
+[2025-08-13 22:06:18,388][__main__][INFO] - MWPM filtering: False
+[2025-08-13 22:06:18,388][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-13 22:06:18,388][__main__][INFO] - Precision: bf16-mixed
+[2025-08-13 22:06:18,388][__main__][INFO] - Max Steps: 50000
+[2025-08-13 22:06:18,388][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-13 22:06:18,388][__main__][INFO] - Log every 100 steps
+[2025-08-13 22:06:18,388][__main__][INFO] - Num Workers: 8
+[2025-08-13 22:06:18,388][__main__][INFO] - Prefetch Factor: 4
+[2025-08-13 22:06:18,388][__main__][INFO] - Persistent Workers: True
+[2025-08-13 22:06:18,389][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb
+[2025-08-13 22:06:18,399][__main__][INFO] - W&B logging disabled in config
+[2025-08-13 22:06:19,023][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-13 22:06:21,523][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=2
+[2025-08-13 22:07:47,719][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:07:47,720][__main__][INFO] - PID: 545135
+[2025-08-13 22:07:47,720][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:07:47,720][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:07:47,720][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:07:47,720][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:07:47,720][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:07:47,720][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:07:47,720][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:07:47,720][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:07:47,720][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:07:47,720][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:07:47,720][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:07:47,720][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:07:47,720][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:07:47,721][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:07:47,721][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:07:47,721][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:07:47,721][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:07:48,348][__main__][INFO] - Num Relations: 66
+[2025-08-13 22:07:48,348][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-13 22:07:48,348][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds_list=[6], p=0.5
+[2025-08-13 22:07:48,348][__main__][INFO] - Standard training (no curriculum)
+[2025-08-13 22:07:48,348][__main__][INFO] - Accelerator: auto
+[2025-08-13 22:07:48,349][__main__][INFO] - Devices per node: auto
+[2025-08-13 22:07:48,349][__main__][INFO] - Num Nodes: 1
+[2025-08-13 22:07:48,349][__main__][INFO] - Total Devices: 1
+[2025-08-13 22:07:48,349][__main__][INFO] - Strategy: auto
+[2025-08-13 22:07:48,349][__main__][INFO] - Sync BatchNorm: True
+[2025-08-13 22:07:48,349][__main__][INFO] - MWPM filtering: False
+[2025-08-13 22:07:48,349][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-13 22:07:48,349][__main__][INFO] - Precision: bf16-mixed
+[2025-08-13 22:07:48,349][__main__][INFO] - Max Steps: 50000
+[2025-08-13 22:07:48,349][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-13 22:07:48,349][__main__][INFO] - Log every 100 steps
+[2025-08-13 22:07:48,349][__main__][INFO] - Num Workers: 8
+[2025-08-13 22:07:48,349][__main__][INFO] - Prefetch Factor: 4
+[2025-08-13 22:07:48,350][__main__][INFO] - Persistent Workers: True
+[2025-08-13 22:07:48,350][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb
+[2025-08-13 22:07:48,353][__main__][INFO] - W&B logging disabled in config
+[2025-08-13 22:07:48,972][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-13 22:07:50,643][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=2
+[2025-08-13 22:09:16,531][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:09:16,531][__main__][INFO] - PID: 545417
+[2025-08-13 22:09:16,531][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:09:16,531][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:09:16,531][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:09:16,531][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:09:16,531][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:09:16,531][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:09:16,531][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:09:16,532][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:09:16,532][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:09:16,532][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:09:16,532][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:09:16,532][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:09:16,532][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:09:16,532][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:09:16,532][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:09:16,532][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:09:16,532][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:09:17,154][__main__][INFO] - Num Relations: 66
+[2025-08-13 22:09:17,154][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-13 22:09:17,155][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds_list=[6], p=0.5
+[2025-08-13 22:09:17,155][__main__][INFO] - Standard training (no curriculum)
+[2025-08-13 22:09:17,155][__main__][INFO] - Accelerator: auto
+[2025-08-13 22:09:17,155][__main__][INFO] - Devices per node: auto
+[2025-08-13 22:09:17,155][__main__][INFO] - Num Nodes: 1
+[2025-08-13 22:09:17,155][__main__][INFO] - Total Devices: 1
+[2025-08-13 22:09:17,155][__main__][INFO] - Strategy: auto
+[2025-08-13 22:09:17,155][__main__][INFO] - Sync BatchNorm: True
+[2025-08-13 22:09:17,155][__main__][INFO] - MWPM filtering: False
+[2025-08-13 22:09:17,155][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-13 22:09:17,156][__main__][INFO] - Precision: bf16-mixed
+[2025-08-13 22:09:17,156][__main__][INFO] - Max Steps: 50000
+[2025-08-13 22:09:17,156][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-13 22:09:17,156][__main__][INFO] - Log every 100 steps
+[2025-08-13 22:09:17,156][__main__][INFO] - Num Workers: 8
+[2025-08-13 22:09:17,156][__main__][INFO] - Prefetch Factor: 4
+[2025-08-13 22:09:17,156][__main__][INFO] - Persistent Workers: True
+[2025-08-13 22:09:17,156][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb
+[2025-08-13 22:09:17,160][__main__][INFO] - W&B logging disabled in config
+[2025-08-13 22:09:17,772][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-13 22:09:19,435][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=2
+[2025-08-13 22:10:41,397][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:10:41,397][__main__][INFO] - PID: 545589
+[2025-08-13 22:10:41,397][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:10:41,397][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:10:41,398][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:10:41,398][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:10:41,398][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:10:41,398][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:10:41,398][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:10:41,398][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:10:41,398][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:10:41,398][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:10:41,398][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:10:41,398][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:10:41,398][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:10:41,398][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:10:41,398][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:10:41,398][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:10:41,398][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:10:42,019][__main__][INFO] - Num Relations: 66
+[2025-08-13 22:10:42,019][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-13 22:10:42,019][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds_list=[6], p=0.5
+[2025-08-13 22:10:42,019][__main__][INFO] - Standard training (no curriculum)
+[2025-08-13 22:10:42,019][__main__][INFO] - Accelerator: auto
+[2025-08-13 22:10:42,020][__main__][INFO] - Devices per node: auto
+[2025-08-13 22:10:42,020][__main__][INFO] - Num Nodes: 1
+[2025-08-13 22:10:42,020][__main__][INFO] - Total Devices: 1
+[2025-08-13 22:10:42,020][__main__][INFO] - Strategy: auto
+[2025-08-13 22:10:42,020][__main__][INFO] - Sync BatchNorm: True
+[2025-08-13 22:10:42,020][__main__][INFO] - MWPM filtering: False
+[2025-08-13 22:10:42,020][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-13 22:10:42,020][__main__][INFO] - Precision: bf16-mixed
+[2025-08-13 22:10:42,020][__main__][INFO] - Max Steps: 50000
+[2025-08-13 22:10:42,020][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-13 22:10:42,020][__main__][INFO] - Log every 100 steps
+[2025-08-13 22:10:42,020][__main__][INFO] - Num Workers: 8
+[2025-08-13 22:10:42,020][__main__][INFO] - Prefetch Factor: 4
+[2025-08-13 22:10:42,021][__main__][INFO] - Persistent Workers: True
+[2025-08-13 22:10:42,021][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb
+[2025-08-13 22:10:42,029][__main__][INFO] - W&B logging disabled in config
+[2025-08-13 22:10:42,641][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-13 22:10:44,321][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=2
+[2025-08-13 22:13:12,755][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:13:12,755][__main__][INFO] - PID: 546092
+[2025-08-13 22:13:12,755][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:13:12,755][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:13:12,755][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:13:12,755][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:13:12,755][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:13:12,755][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:13:12,755][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:13:12,755][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:13:12,756][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:13:12,756][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:13:12,756][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:13:12,756][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:13:12,756][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:13:12,756][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:13:12,756][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:13:12,756][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:13:12,756][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:13:13,388][__main__][INFO] - Num Relations: 66
+[2025-08-13 22:13:13,388][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-13 22:13:13,388][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds_list=[6], p=0.5
+[2025-08-13 22:13:13,388][__main__][INFO] - Standard training (no curriculum)
+[2025-08-13 22:13:13,388][__main__][INFO] - Accelerator: auto
+[2025-08-13 22:13:13,389][__main__][INFO] - Devices per node: auto
+[2025-08-13 22:13:13,389][__main__][INFO] - Num Nodes: 1
+[2025-08-13 22:13:13,389][__main__][INFO] - Total Devices: 1
+[2025-08-13 22:13:13,389][__main__][INFO] - Strategy: auto
+[2025-08-13 22:13:13,389][__main__][INFO] - Sync BatchNorm: True
+[2025-08-13 22:13:13,389][__main__][INFO] - MWPM filtering: False
+[2025-08-13 22:13:13,389][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-13 22:13:13,389][__main__][INFO] - Precision: bf16-mixed
+[2025-08-13 22:13:13,389][__main__][INFO] - Max Steps: 50000
+[2025-08-13 22:13:13,389][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-13 22:13:13,389][__main__][INFO] - Log every 100 steps
+[2025-08-13 22:13:13,389][__main__][INFO] - Num Workers: 8
+[2025-08-13 22:13:13,389][__main__][INFO] - Prefetch Factor: 4
+[2025-08-13 22:13:13,389][__main__][INFO] - Persistent Workers: True
+[2025-08-13 22:13:13,390][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb
+[2025-08-13 22:13:13,394][__main__][INFO] - W&B logging disabled in config
+[2025-08-13 22:13:14,004][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-13 22:13:15,677][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=2
+[2025-08-13 22:14:50,286][__main__][INFO] - === STARTING EXPERIMENT: bb ===
+[2025-08-13 22:14:50,286][__main__][INFO] - PID: 547047
+[2025-08-13 22:14:50,286][__main__][INFO] - SLURM_JOB_ID: 30057267
+[2025-08-13 22:14:50,286][__main__][INFO] - NODE_RANK: unknown
+[2025-08-13 22:14:50,287][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-13 22:14:50,287][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-13 22:14:50,287][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-13 22:14:50,287][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-13 22:14:50,287][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-13 22:14:50,287][__main__][INFO] - SLURM_NODELIST: holygpu7c26106
+[2025-08-13 22:14:50,287][__main__][INFO] - Architecture: rgcn50
+[2025-08-13 22:14:50,287][__main__][INFO] - Embedding Dim: 64
+[2025-08-13 22:14:50,287][__main__][INFO] - Learning Rate: 0.0003
+[2025-08-13 22:14:50,287][__main__][INFO] - Weight Decay: 0.0
+[2025-08-13 22:14:50,287][__main__][INFO] - Optimizer: schedulefree
+[2025-08-13 22:14:50,287][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-13 22:14:50,287][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-13 22:14:50,287][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-13 22:14:50,288][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-13 22:14:50,906][__main__][INFO] - Num Relations: 66
+[2025-08-13 22:14:50,906][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-13 22:14:50,906][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds_list=[6], p=0.5
+[2025-08-13 22:14:50,906][__main__][INFO] - Standard training (no curriculum)
+[2025-08-13 22:14:50,906][__main__][INFO] - Accelerator: auto
+[2025-08-13 22:14:50,907][__main__][INFO] - Devices per node: auto
+[2025-08-13 22:14:50,907][__main__][INFO] - Num Nodes: 1
+[2025-08-13 22:14:50,907][__main__][INFO] - Total Devices: 1
+[2025-08-13 22:14:50,907][__main__][INFO] - Strategy: auto
+[2025-08-13 22:14:50,907][__main__][INFO] - Sync BatchNorm: True
+[2025-08-13 22:14:50,907][__main__][INFO] - MWPM filtering: False
+[2025-08-13 22:14:50,907][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-13 22:14:50,907][__main__][INFO] - Precision: bf16-mixed
+[2025-08-13 22:14:50,907][__main__][INFO] - Max Steps: 50000
+[2025-08-13 22:14:50,907][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-13 22:14:50,907][__main__][INFO] - Log every 100 steps
+[2025-08-13 22:14:50,907][__main__][INFO] - Num Workers: 8
+[2025-08-13 22:14:50,907][__main__][INFO] - Prefetch Factor: 4
+[2025-08-13 22:14:50,908][__main__][INFO] - Persistent Workers: True
+[2025-08-13 22:14:50,908][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb
+[2025-08-13 22:14:50,911][__main__][INFO] - W&B logging disabled in config
+[2025-08-13 22:14:51,526][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-13 22:14:53,198][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=2
+[2025-08-13 22:14:56,348][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=4
+[2025-08-13 22:14:58,024][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=8
+[2025-08-13 22:14:59,841][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=16
+[2025-08-13 22:15:01,907][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=32
+[2025-08-13 22:15:04,514][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=64
+[2025-08-13 22:15:08,222][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=128
+[2025-08-13 22:15:09,717][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=96
+[2025-08-13 22:15:14,941][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=112
+[2025-08-13 22:15:20,668][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=120
+[2025-08-13 22:15:26,725][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=124
+[2025-08-13 22:15:28,506][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=122
+[2025-08-13 22:15:34,720][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=123
+[2025-08-13 22:15:41,120][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=123
+[2025-08-13 22:15:42,968][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-13 22:15:43,084][__main__][INFO] - Found optimal batch size 123
+[2025-08-13 22:15:43,088][__main__][INFO] - Saved batch size 104 to file
+[2025-08-13 22:15:43,088][__main__][INFO] - Optimal per-GPU batch size found: 104
+[2025-08-13 22:15:43,088][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 104
+[2025-08-13 22:15:43,092][__main__][INFO] - Saved metadata: {'timestamp': 1755137743.0889492, 'slurm_job_id': '30057267', 'batch_size': 104, 'num_devices': 1, 'effective_batch_size': 104}
+[2025-08-13 22:15:43,511][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-13 22:15:43,910][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds_list=[6], p=0.5, batch_size=104

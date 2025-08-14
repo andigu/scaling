@@ -47,10 +47,13 @@ class BivariateBicycleDataset(IterableDataset):
         # Build static code graph structure (independent of rounds)
         self._static_graph_structure = self._build_static_graph_structure()
     
-    def get_num_relations(self):
+    def get_neighborhood_size(self):
         """Get the total number of relation types (static + temporal)."""
-        num_static_edge_types = len(self._static_graph_structure['all_edge_types'])
-        return num_static_edge_types * 3  # 3 for temporal connections [-1, 0, 1]
+        detectors, logical_errors, (rounds, p), mt = self.generate_batch(
+                self.l, self.m, [10], 0.01, 1
+        )
+        graph = self._build_spatiotemporal_graph_structure(rounds, mt)
+        return graph.shape[1]
     
     def get_num_logical_qubits(self):
         """Get the number of logical qubits encoded by this BB code."""
@@ -115,28 +118,38 @@ class BivariateBicycleDataset(IterableDataset):
         # Get actual detector metadata from measurement tracker
         det = pd.DataFrame(mt.detectors)
         
+        t0 = det[det['time'] == 1].copy()
+        t0['time'] = 0
+        t0['detector_id'] = -1
+        tf = det[det['time'] == det['time'].max()]
+        opposite_basis = t0[~t0['syndrome_id'].isin(tf['syndrome_id'].values)].copy()
+        opposite_basis['time'] = det['time'].max()
+        tf2 = t0.copy()
+        tf2['time'] = det['time'].max()+1
+        det = pd.concat([t0, det, opposite_basis, tf2]).sort_values(by=['time', 'syndrome_id']).reset_index(drop=True)
+        
+        graph_df = self._static_graph_structure['graph_df']
+        all_edge_types = self._static_graph_structure['all_edge_types']
         det_graph = det.merge(graph_df, on='syndrome_id').merge(
             det, left_on='neighbor_syndrome_id', right_on='syndrome_id', suffixes=('', '_nb')
         )
-        
+
         # Filter temporal connections (allow connections within 1 time step)
         det_graph = det_graph[np.abs(det_graph['time'] - det_graph['time_nb']) <= 1]
-        
+
         # Encode temporal information in edge types
         dt = det_graph['time_nb'] - det_graph['time'] + 1  # Maps [-1, 0, 1] to [0, 1, 2]
         det_graph['final_edge_type'] = dt * len(all_edge_types) + det_graph['edge_type']
-        
-        # Create final edge list
-        edge_index = det_graph[['detector_id', 'detector_id_nb']].values.T
-        edge_attr = det_graph['final_edge_type'].values
-        
-        return {
-            'edge_index': edge_index,
-            'edge_attr': edge_attr,
-            'num_nodes': len(det),
-            'num_edge_types': (len(all_edge_types) * 3),  # 3 for temporal [-1, 0, 1]
-            'det_df': det
-        }
+
+        actual_graph = det_graph[det_graph['detector_id'] != -1]
+        actual_graph = actual_graph.sort_values(['detector_id', 'final_edge_type'])
+        graph = actual_graph[['detector_id', 'detector_id_nb', 'final_edge_type']].to_numpy()
+        _, counts = np.unique(graph[...,0], return_counts=True)
+        assert np.all(counts == counts[0])
+        nbrhood_size = counts[0]
+        graph = graph.reshape((-1, nbrhood_size, 3))
+        return graph
+
     
     @staticmethod
     def generate_batch(l, m, rounds_list, p, batch_size):
@@ -179,13 +192,12 @@ class BivariateBicycleDataset(IterableDataset):
             detectors, logical_errors, (rounds, p), mt = self.generate_batch(
                 self.l, self.m, self.rounds_list, current_p, self.batch_size
             )
-            graph_structure = self._build_spatiotemporal_graph_structure(rounds, mt)
-            edge_indices, edge_types = graph_structure['edge_index'], graph_structure['edge_attr'] # (2, |E|), (|E|, )
-            batch_size, num_nodes = detectors.shape
-            edge_indices = (edge_indices[..., None] + np.arange(batch_size)[None, None, :] * num_nodes).reshape((2, -1)).astype(np.int32)
-            edge_types = np.repeat(edge_types[:, None], batch_size, axis=1).reshape(-1).astype(np.int32)
-            detectors = detectors.astype(np.int32)
-            yield (detectors, edge_indices, edge_types), np.squeeze(logical_errors.astype(np.float32), axis=1), (rounds, p)
+            graph = self._build_spatiotemporal_graph_structure(rounds, mt)
+            # graph[i] is a 2d array representing the neighborhood of node i. 
+            # graph[i][...,0] = i (source node), graph[i][...,1] are the neighbors, and graph[i][...,2] are edge types
+            # there are only two types of neighborhoods in the entire graph, depending on whether source node is X or Z type (same as surface code)
+            # we will ignore the distinction for now, it seems to work well enough for the surface code
+            yield (detectors.astype(np.int32), graph), np.squeeze(logical_errors.astype(np.float32), axis=1), (rounds, p)
 
             # Increment local sample count after generating batch
             self.local_sample_count += 1
