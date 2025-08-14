@@ -168,24 +168,36 @@ class ResNet3DTrainer(L.LightningModule):
         )
         self.stage_manager = StageManager(curriculum_config) if curriculum_config.enabled else None
         
+        # Get dataset class to determine num_embeddings
+        dataset_class = get_dataset_class(cfg)
+        
         # Create model based on architecture
         if cfg.model.architecture.startswith('rgcn'):
-            # For RGCN, infer num_relations and num_logical_qubits from dataset
-            dataset_class = get_dataset_class(cfg)
+            # For RGCN, infer num_relations, num_logical_qubits, and num_embeddings from dataset
             if hasattr(dataset_class, '__name__') and 'BivariateBicycle' in dataset_class.__name__:
-                # Create a temporary dataset instance to get num_relations and num_logical_qubits
+                # Create a temporary dataset instance to get parameters
                 temp_dataset = dataset_class(
                     l=cfg.dataset.l,
                     m=cfg.dataset.m,
-                    rounds_list=cfg.dataset.rounds_list,
+                    rounds=cfg.dataset.rounds,
                     p=cfg.dataset.p,
                     batch_size=1  # Minimal size for initialization
                 )
                 neighborhood_size = temp_dataset.get_neighborhood_size()
                 num_logical_qubits = temp_dataset.get_num_logical_qubits()
+                num_embeddings = temp_dataset.get_num_embeddings()
             else:
+                # For surface code with RGCN (if that's ever used)
+                temp_dataset = dataset_class(
+                    d=cfg.dataset.d,
+                    rounds=cfg.dataset.rounds,
+                    p=cfg.dataset.p,
+                    batch_size=1,
+                    mwpm_filter=cfg.dataset.mwpm_filter
+                )
                 neighborhood_size = cfg.model.get('neighborhood_size', 12)  # Fallback
                 num_logical_qubits = 1  # Default for surface codes
+                num_embeddings = temp_dataset.get_num_embeddings()
             
             self.model = RGCN(
                 architecture=cfg.model.architecture,
@@ -193,9 +205,29 @@ class ResNet3DTrainer(L.LightningModule):
                 channel_multipliers=cfg.model.get('channel_multipliers', None),
                 use_lstm=cfg.model.get('use_lstm', False),
                 neighborhood_size=neighborhood_size,
-                num_logical_qubits=num_logical_qubits
+                num_logical_qubits=num_logical_qubits,
+                num_embeddings=num_embeddings
             )
         else:  # ResNet architectures
+            # Create a temporary dataset instance to get num_embeddings
+            if hasattr(dataset_class, '__name__') and 'BivariateBicycle' in dataset_class.__name__:
+                temp_dataset = dataset_class(
+                    l=cfg.dataset.l,
+                    m=cfg.dataset.m,
+                    rounds=cfg.dataset.rounds,
+                    p=cfg.dataset.p,
+                    batch_size=1
+                )
+            else:
+                temp_dataset = dataset_class(
+                    d=cfg.dataset.d,
+                    rounds=cfg.dataset.rounds,
+                    p=cfg.dataset.p,
+                    batch_size=1,
+                    mwpm_filter=cfg.dataset.mwpm_filter
+                )
+            num_embeddings = temp_dataset.get_num_embeddings()
+            
             self.model = ResNet3D(
                 architecture=cfg.model.architecture,
                 embedding_dim=cfg.model.embedding_dim,
@@ -203,8 +235,28 @@ class ResNet3DTrainer(L.LightningModule):
                 stage3_stride=tuple(cfg.model.stage3_stride),
                 stage4_stride=tuple(cfg.model.stage4_stride),
                 use_lstm=cfg.model.get('use_lstm', False),
-                chunking=cfg.dataset.get('chunking', (1, 1, 1))
+                num_embeddings=num_embeddings
             )
+        
+        # Apply torch.compile if enabled (for both RGCN and ResNet)
+        if cfg.model.get('compile', {}).get('enabled', False):
+            compile_config = cfg.model.compile
+            compile_mode = compile_config.get('mode', 'default')
+            compile_fullgraph = compile_config.get('fullgraph', False)
+            compile_dynamic = compile_config.get('dynamic', None)
+            
+            log.info(f"Compiling model with mode='{compile_mode}', fullgraph={compile_fullgraph}, dynamic={compile_dynamic}")
+            
+            compile_kwargs = {
+                'mode': compile_mode,
+                'fullgraph': compile_fullgraph
+            }
+            if compile_dynamic is not None:
+                compile_kwargs['dynamic'] = compile_dynamic
+            
+            self.model = torch.compile(self.model, **compile_kwargs)
+            log.info("Model compilation enabled - first batch will be slower due to compilation overhead")
+        
         self.reset_metrics()
     
     def setup(self, stage: str) -> None:
@@ -219,7 +271,7 @@ class ResNet3DTrainer(L.LightningModule):
         
     def reset_metrics(self):
         self.loss_ema = EMA(0.995)
-        self.inacc_ema = {r: EMA(0.995) for r in self.cfg.dataset.rounds_list}
+        self.inacc_ema = EMA(0.995)
     
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -251,12 +303,11 @@ class ResNet3DTrainer(L.LightningModule):
             inacc = ((pred > 0) != y).float().mean().item()
             
             self.loss_ema.update(loss_item)
-            self.inacc_ema[int(t_str)].update(inacc)
+            self.inacc_ema.update(inacc)
         
         # Log metrics with stage prefix (Lightning handles multi-GPU synchronization)
         self.log(f'{stage_prefix}loss_ema', self.loss_ema.get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
-        for t2 in sorted(self.inacc_ema.keys()):
-            self.log(f'{stage_prefix}inacc_{t2}', self.inacc_ema[t2].get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
+        self.log(f'{stage_prefix}inacc', self.inacc_ema.get(), on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
         if self.stage_manager is not None:
             self.log(f'curriculum_p', p_err, on_step=True, prog_bar=True, sync_dist=False, rank_zero_only=True)
         return loss
@@ -277,7 +328,7 @@ class ResNet3DTrainer(L.LightningModule):
         
         # Add EMA states
         state['loss_ema'] = self.loss_ema.state_dict()
-        state['inacc_ema'] = {r: ema.state_dict() for r, ema in self.inacc_ema.items()}
+        state['inacc_ema'] = self.inacc_ema.state_dict()
         
         # Add stage manager state for curriculum learning
         if self.stage_manager is not None:
@@ -300,9 +351,7 @@ class ResNet3DTrainer(L.LightningModule):
             self.loss_ema.load_state_dict(loss_ema_state)
         
         if inacc_ema_states is not None:
-            for r, ema_state in inacc_ema_states.items():
-                if r in self.inacc_ema:
-                    self.inacc_ema[r].load_state_dict(ema_state)
+            self.inacc_ema.load_state_dict(inacc_ema_states)
         
         # Restore stage manager state if available
         if stage_manager_state is not None and self.stage_manager is not None:
@@ -317,8 +366,6 @@ class ResNet3DTrainer(L.LightningModule):
         # Store the global step for DataModule update
         self._resume_global_step = checkpoint.get('global_step', 0)
         log.info(f"Model loaded from checkpoint at global step {self._resume_global_step}")
-
-
 
 
 def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, num_devices: int = 1, run_id: str = None):
@@ -347,7 +394,7 @@ def setup_wandb_logger(cfg: DictConfig, experiment_state: ExperimentState, num_d
             'stage3_stride': cfg.model.stage3_stride,
             'stage4_stride': cfg.model.stage4_stride,
             'dataset_d': cfg.dataset.d,
-            'dataset_rounds_list': cfg.dataset.rounds_list,
+            'dataset_rounds': cfg.dataset.rounds,
             'dataset_p': cfg.dataset.p,
             'curriculum_enabled': cfg.curriculum.enabled,
             'curriculum_stage1_p': cfg.curriculum.stage1_p if cfg.curriculum.enabled else None,
@@ -405,33 +452,59 @@ def train_experiment(cfg: DictConfig):
     log.info(f"Channel Multipliers: {cfg.model.get('channel_multipliers', [2, 4, 8, 16])}")
     
     # Log model-specific parameters
+    dataset_class = get_dataset_class(cfg)
     if cfg.model.architecture.startswith('rgcn'):
-        # Get num_relations and num_logical_qubits from dataset for logging
-        dataset_class = get_dataset_class(cfg)
+        # Get num_relations, num_logical_qubits, and num_embeddings from dataset for logging
         if hasattr(dataset_class, '__name__') and 'BivariateBicycle' in dataset_class.__name__:
             temp_dataset = dataset_class(
                 l=cfg.dataset.l,
                 m=cfg.dataset.m,
-                rounds_list=cfg.dataset.rounds_list,
+                rounds=cfg.dataset.rounds,
                 p=cfg.dataset.p,
                 batch_size=1
             )
             log.info(f"Num Relations: {temp_dataset.get_neighborhood_size()}")
             log.info(f"Num Logical Qubits: {temp_dataset.get_num_logical_qubits()}")
+            log.info(f"Num Embeddings: {temp_dataset.get_num_embeddings()}")
         else:
+            temp_dataset = dataset_class(
+                d=cfg.dataset.d,
+                rounds=cfg.dataset.rounds,
+                p=cfg.dataset.p,
+                batch_size=1,
+                mwpm_filter=cfg.dataset.mwpm_filter
+            )
             log.info(f"Num Logical Qubits: 1")
+            log.info(f"Num Embeddings: {temp_dataset.get_num_embeddings()}")
     else:
+        # ResNet architectures
+        if hasattr(dataset_class, '__name__') and 'BivariateBicycle' in dataset_class.__name__:
+            temp_dataset = dataset_class(
+                l=cfg.dataset.l,
+                m=cfg.dataset.m,
+                rounds=cfg.dataset.rounds,
+                p=cfg.dataset.p,
+                batch_size=1
+            )
+        else:
+            temp_dataset = dataset_class(
+                d=cfg.dataset.d,
+                rounds=cfg.dataset.rounds,
+                p=cfg.dataset.p,
+                batch_size=1,
+                mwpm_filter=cfg.dataset.mwpm_filter
+            )
         log.info(f"Stage3 Stride: {cfg.model.stage3_stride}")
         log.info(f"Stage4 Stride: {cfg.model.stage4_stride}")
         log.info(f"Use LSTM: {cfg.model.use_lstm}")
-        log.info(f"Chunking: {cfg.dataset.chunking}")
+        log.info(f"Num Embeddings: {temp_dataset.get_num_embeddings()}")
     
     # Log dataset-specific parameters
     code_type = cfg.dataset.get('code_type', 'surface_code')
     if code_type == 'bivariate_bicycle':
-        log.info(f"Dataset: code_type={code_type}, l={cfg.dataset.l}, m={cfg.dataset.m}, rounds_list={cfg.dataset.rounds_list}, p={cfg.dataset.p}")
+        log.info(f"Dataset: code_type={code_type}, l={cfg.dataset.l}, m={cfg.dataset.m}, rounds={cfg.dataset.rounds}, p={cfg.dataset.p}")
     else:
-        log.info(f"Dataset: code_type={code_type}, d={cfg.dataset.d}, rounds_list={cfg.dataset.rounds_list}, p={cfg.dataset.p}")
+        log.info(f"Dataset: code_type={code_type}, d={cfg.dataset.d}, rounds={cfg.dataset.rounds}, p={cfg.dataset.p}")
     
     # Log curriculum learning configuration
     if cfg.curriculum.enabled:
@@ -597,7 +670,7 @@ def train_experiment(cfg: DictConfig):
                 model.reset_metrics()
                 
                 # Use tuned batch size
-                batch_size = math.floor(temp_data_module.batch_size * 0.85)
+                batch_size = math.floor(temp_data_module.batch_size * 0.925)
                 
                 # Save batch size for other ranks
                 batch_size_file.write_text(str(batch_size))

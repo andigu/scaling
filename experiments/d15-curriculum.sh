@@ -56,9 +56,8 @@ echo ""
 python src/train.py \
     experiment=baseline \
     dataset.d=15 \
-    dataset.rounds_list=[15] \
+    dataset.rounds=15 \
     dataset.mwpm_filter=false \
-    dataset.chunking=[1,1,1] \
     model.architecture=resnet50 \
     model.embedding_dim=128 \
     model.channel_multipliers=[2,2.5,3,3.5] \

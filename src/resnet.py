@@ -16,8 +16,8 @@ class ResNet3D(nn.Module):
     }
     
     def __init__(self, layers=None, embedding_dim=128, architecture='resnet50', 
-                 stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), use_lstm=False, chunking=(1,1,1),
-                 channel_multipliers=None):
+                 stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), use_lstm=False,
+                 channel_multipliers=None, num_embeddings=None):
         """
         Args:
             layers: List of integers specifying blocks per stage [stage1, stage2, stage3, stage4]
@@ -26,13 +26,12 @@ class ResNet3D(nn.Module):
             stage3_stride: 3-tuple (T, H, W) stride for stage 3 downsampling
             stage4_stride: 3-tuple (T, H, W) stride for stage 4 downsampling
             use_lstm: Whether to use LSTM for temporal processing
-            chunking: Whether input data is chunked (affects embedding vocabulary size)
             channel_multipliers: List of 4 multipliers for channel expansion [stage1, stage2, stage3, stage4]
                                Defaults to [2, 4, 8, 16] for standard ResNet behavior
+            num_embeddings: Number of embeddings (mandatory)
         """
         super().__init__()
         self.embedding_dim = embedding_dim
-        self.chunking = chunking
         
         # Use provided layers or lookup from architecture
         if layers is None:
@@ -60,8 +59,9 @@ class ResNet3D(nn.Module):
         self.channel_multipliers = channel_multipliers
         
         # Embedding layer for detector states
-        # Although the number of embeddings may be big, a lot of them are inactive with chunking. It's closer to 2**np.prod(chunking) - the 3 accounts for boundaries
-        self.embedding = nn.Embedding(int(3**np.prod(chunking)), embedding_dim, padding_idx=0)
+        if num_embeddings is None:
+            raise ValueError("num_embeddings is required")
+        self.embedding = nn.Embedding(num_embeddings, embedding_dim, padding_idx=0)
         
         # Build stages with calculated channel counts
         self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0], dilation=1)
@@ -69,16 +69,13 @@ class ResNet3D(nn.Module):
         self.stage3 = self._make_stage(stage_channels[1], stage_channels[2], layers[2], dilation=1, stride=stage3_stride)
         self.stage4 = self._make_stage(stage_channels[2], stage_channels[3], layers[3], dilation=1, stride=stage4_stride)
         
-        # Channel reduction back to embedding_dim from final stage
-        self.channel_reduce = nn.Conv3d(stage_channels[3], embedding_dim, kernel_size=1)
-
         self.use_lstm = use_lstm
         if use_lstm:
-            self.lstm = nn.LSTM(embedding_dim, embedding_dim, batch_first=True)
+            self.lstm = nn.LSTM(stage_channels[3], embedding_dim, batch_first=True)
         
         # Learnable spatial weighting and projection
         self.project = nn.Sequential(
-            nn.Linear(embedding_dim, 2*embedding_dim),
+            nn.Linear(stage_channels[3], 2*embedding_dim),
             nn.GELU(),
             nn.Linear(2*embedding_dim, 1)
         )
@@ -165,7 +162,7 @@ class ResNet3D(nn.Module):
             
         return BottleneckBlock(layers, skip)
     
-    def forward(self, x, *args, **kwargs):
+    def forward(self, x):
         # Input: (batch, time, height, width)
         embedding = self.embedding(x)
         embedding = torch.permute(embedding, (0, 4, 1, 2, 3))  # (batch, embedding_dim, time, height, width)
@@ -176,8 +173,6 @@ class ResNet3D(nn.Module):
         embedding = self.stage3(embedding)  # 512 -> 1024
         embedding = self.stage4(embedding)  # 1024 -> 2048
         
-        # Reduce channels back to embedding_dim
-        embedding = self.channel_reduce(embedding)  # 2048 -> 128
         if self.use_lstm:
             embedding = embedding.mean(dim=(-1, -2))  # (batch, embedding_dim, time)
             embedding = embedding.permute(0, 2, 1)  # (batch, time, embedding_dim)
@@ -187,39 +182,39 @@ class ResNet3D(nn.Module):
             return self.project(embedding.mean(dim=(-1,-2,-3)))  # (batch, time, 1)
 
     @classmethod
-    def resnet18(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
+    def resnet18(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), channel_multipliers=None, num_embeddings=None):
         """Create ResNet18 variant."""
         return cls(architecture='resnet18', embedding_dim=embedding_dim, 
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
-                  channel_multipliers=channel_multipliers)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride,
+                  channel_multipliers=channel_multipliers, num_embeddings=num_embeddings)
 
     @classmethod
-    def resnet34(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
+    def resnet34(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), channel_multipliers=None, num_embeddings=None):
         """Create ResNet34 variant."""
         return cls(architecture='resnet34', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
-                  channel_multipliers=channel_multipliers)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride,
+                  channel_multipliers=channel_multipliers, num_embeddings=num_embeddings)
 
     @classmethod
-    def resnet50(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
+    def resnet50(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), channel_multipliers=None, num_embeddings=None):
         """Create ResNet50 variant."""
         return cls(architecture='resnet50', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
-                  channel_multipliers=channel_multipliers)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride,
+                  channel_multipliers=channel_multipliers, num_embeddings=num_embeddings)
     
     @classmethod
-    def resnet101(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
+    def resnet101(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), channel_multipliers=None, num_embeddings=None):
         """Create ResNet101 variant."""
         return cls(architecture='resnet101', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
-                  channel_multipliers=channel_multipliers)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride,
+                  channel_multipliers=channel_multipliers, num_embeddings=num_embeddings)
 
     @classmethod
-    def resnet152(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), chunking=(1, 1, 1), channel_multipliers=None):
+    def resnet152(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), channel_multipliers=None, num_embeddings=None):
         """Create ResNet152 variant."""
         return cls(architecture='resnet152', embedding_dim=embedding_dim,
-                  stage3_stride=stage3_stride, stage4_stride=stage4_stride, chunking=chunking,
-                  channel_multipliers=channel_multipliers)
+                  stage3_stride=stage3_stride, stage4_stride=stage4_stride,
+                  channel_multipliers=channel_multipliers, num_embeddings=num_embeddings)
 
 
 class BottleneckBlock(nn.Module):

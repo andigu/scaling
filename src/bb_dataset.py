@@ -18,13 +18,13 @@ class BivariateBicycleDataset(IterableDataset):
     Supports 3-stage curriculum learning with automatic p adjustment.
     """
     
-    def __init__(self, l=6, m=6, rounds_list=None, p=2.0, batch_size=32, 
+    def __init__(self, l=6, m=6, rounds=10, p=2.0, batch_size=32, 
                  stage_manager=None, num_workers=8, global_step_offset=0, **kwargs):
         """
         Args:
             l: BB code parameter l
             m: BB code parameter m
-            rounds_list: List of rounds to sample from (e.g., [1,2,3,4,5])
+            rounds: Number of syndrome rounds
             p: Default error probability parameter (used when stage_manager is None)
             batch_size: Batch size for generated data
             stage_manager: StageManager instance for curriculum learning (optional)
@@ -36,7 +36,7 @@ class BivariateBicycleDataset(IterableDataset):
         self.batch_size = batch_size
         self.l = l
         self.m = m
-        self.rounds_list = rounds_list if rounds_list is not None else list(range(1, 10))
+        self.rounds = rounds
         self.stage_manager = stage_manager
         self.num_workers = num_workers
         self.global_step_offset = global_step_offset
@@ -50,7 +50,7 @@ class BivariateBicycleDataset(IterableDataset):
     def get_neighborhood_size(self):
         """Get the total number of relation types (static + temporal)."""
         detectors, logical_errors, (rounds, p), mt = self.generate_batch(
-                self.l, self.m, [10], 0.01, 1
+                self.l, self.m, 10, 0.01, 1
         )
         graph = self._build_spatiotemporal_graph_structure(rounds, mt)
         return graph.shape[1]
@@ -152,11 +152,8 @@ class BivariateBicycleDataset(IterableDataset):
 
     
     @staticmethod
-    def generate_batch(l, m, rounds_list, p, batch_size):
+    def generate_batch(l, m, rounds, p, batch_size):
         """Generate a single batch of bivariate bicycle code data."""
-        rounds = np.random.choice(rounds_list)
-        max_rounds = max(rounds_list)
-        batch_size = math.floor(batch_size * max_rounds / rounds)
         
         # Create BB code circuit
         alg = Algorithm.build_memory(cycles=rounds)
@@ -190,9 +187,9 @@ class BivariateBicycleDataset(IterableDataset):
             
             # Generate batch with current curriculum p value
             detectors, logical_errors, (rounds, p), mt = self.generate_batch(
-                self.l, self.m, self.rounds_list, current_p, self.batch_size
+                self.l, self.m, self.rounds, current_p, self.batch_size
             )
-            synd_id = mt.detectors['syndrome_id']
+            synd_id = mt.detectors['detector_id']
             detectors = detectors * (synd_id.max()+1) + synd_id[None,:]
             graph = self._build_spatiotemporal_graph_structure(rounds, mt)
             # graph[i] is a 2d array representing the neighborhood of node i. 
@@ -203,3 +200,9 @@ class BivariateBicycleDataset(IterableDataset):
 
             # Increment local sample count after generating batch
             self.local_sample_count += 1
+    
+    def get_num_embeddings(self):
+        det, _, _ = self.generate_batch(
+            self.l, self.m, self.rounds, 1.0, self.batch_size
+        )
+        return 2*det.shape[1]

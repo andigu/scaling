@@ -17,7 +17,7 @@ class RGCN(nn.Module):
     }
     
     def __init__(self, layers=None, embedding_dim=128, architecture='rgcn50', 
-                 use_lstm=False, channel_multipliers=None, neighborhood_size=66, num_logical_qubits=1):
+                 use_lstm=False, channel_multipliers=None, neighborhood_size=66, num_logical_qubits=1, num_embeddings=None):
         """
         Args:
             layers: List of integers specifying blocks per stage [stage1, stage2, stage3, stage4]
@@ -27,6 +27,7 @@ class RGCN(nn.Module):
             channel_multipliers: List of 4 multipliers for channel expansion [stage1, stage2, stage3, stage4]
             neighborhood_size: Size of the neighborhood for graph convolutions
             num_logical_qubits: Number of logical qubits to predict (output dimension)
+            num_embeddings: Number of embeddings (mandatory)
         """
         super().__init__()
         self.embedding_dim = embedding_dim
@@ -58,8 +59,10 @@ class RGCN(nn.Module):
         self.stage_channels = stage_channels
         self.channel_multipliers = channel_multipliers
         
-        # Input embedding layer for detector states (0, 1 detectors)
-        self.embedding = nn.Embedding(500, embedding_dim)
+        # Input embedding layer for detector states
+        if num_embeddings is None:
+            raise ValueError("num_embeddings is required")
+        self.embedding = nn.Embedding(num_embeddings, embedding_dim)
         
         # Build stages with calculated channel counts
         self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0])
@@ -182,39 +185,39 @@ class RGCN(nn.Module):
         return x
     
     @classmethod
-    def rgcn18(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1):
+    def rgcn18(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN18 variant."""
         return cls(architecture='rgcn18', embedding_dim=embedding_dim, 
                   channel_multipliers=channel_multipliers, num_relations=num_relations,
-                  num_logical_qubits=num_logical_qubits)
+                  num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
     @classmethod
-    def rgcn34(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1):
+    def rgcn34(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN34 variant."""
         return cls(architecture='rgcn34', embedding_dim=embedding_dim,
                   channel_multipliers=channel_multipliers, num_relations=num_relations,
-                  num_logical_qubits=num_logical_qubits)
+                  num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
     @classmethod
-    def rgcn50(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1):
+    def rgcn50(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN50 variant."""
         return cls(architecture='rgcn50', embedding_dim=embedding_dim,
                   channel_multipliers=channel_multipliers, num_relations=num_relations,
-                  num_logical_qubits=num_logical_qubits)
+                  num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
     
     @classmethod
-    def rgcn101(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1):
+    def rgcn101(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN101 variant."""
         return cls(architecture='rgcn101', embedding_dim=embedding_dim,
                   channel_multipliers=channel_multipliers, num_relations=num_relations,
-                  num_logical_qubits=num_logical_qubits)
+                  num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
     @classmethod
-    def rgcn152(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1):
+    def rgcn152(cls, embedding_dim=128, channel_multipliers=None, num_relations=12, num_logical_qubits=1, num_embeddings=None):
         """Create RGCN152 variant."""
         return cls(architecture='rgcn152', embedding_dim=embedding_dim,
                   channel_multipliers=channel_multipliers, num_relations=num_relations,
-                  num_logical_qubits=num_logical_qubits)
+                  num_logical_qubits=num_logical_qubits, num_embeddings=num_embeddings)
 
 
 class RGCNBlock(nn.Module):

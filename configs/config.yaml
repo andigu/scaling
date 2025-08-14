@@ -11,7 +11,6 @@ dataset:
   # Surface code parameters (used when code_type="surface_code")
   d: 9                     # Surface code distance
   mwpm_filter: false       # Enable/disable MWPM filtering
-  chunking: [1,1,1]        # Chunk by time, x, and y dimension
   
   # Bivariate bicycle parameters (used when code_type="bivariate_bicycle")
   l: 6                     # BB code parameter l
@@ -19,7 +18,7 @@ dataset:
   
   # Common parameters
   p: 2.1                   # Error probability parameter
-  rounds_list: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]  # List of rounds to sample from
+  rounds: 10               # Number of syndrome rounds
 
 # Model architecture (main sweep targets)
 model:
@@ -37,6 +36,13 @@ model:
   
   # RGCN specific parameters (ignored for ResNet3D)
   # num_relations: auto-inferred from dataset
+  
+  # Model compilation settings (torch.compile)
+  compile:
+    enabled: false         # Enable torch.compile for performance optimization
+    mode: "default"        # Compilation mode: "default", "reduce-overhead", "max-autotune"
+    fullgraph: false       # Compile as single graph (stricter but potentially faster)
+    dynamic: null          # Dynamic shape support (null=auto, true/false for explicit)
 
 # Training parameters
 training:
