@@ -197,7 +197,7 @@ class BivariateBicycleDataset(IterableDataset):
             # graph[i][...,0] = i (source node), graph[i][...,1] are the neighbors, and graph[i][...,2] are edge types
             # there are only two types of neighborhoods in the entire graph, depending on whether source node is X or Z type (same as surface code)
             # we will ignore the distinction for now, it seems to work well enough for the surface code
-            yield (detectors.astype(np.int32), graph), np.squeeze(logical_errors.astype(np.float32), axis=1), (rounds, p)
+            yield (detectors.astype(np.float32), graph), np.squeeze(logical_errors.astype(np.float32), axis=1), (rounds, p)
 
             # Increment local sample count after generating batch
             self.local_sample_count += 1
