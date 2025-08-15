@@ -705,7 +705,7 @@ def train_experiment(cfg: DictConfig):
                 # Other ranks wait for batch size file to be created by rank 0
                 log.info("=== WAITING FOR BATCH SIZE FROM RANK 0 ===")
                 import time
-                wait_timeout = 600  # 10 minutes
+                wait_timeout = 1200  # 20 minutes
                 wait_start = time.time()
                 
                 while not batch_size_file.exists():

@@ -4,7 +4,7 @@
 #SBATCH --constraint="h100"
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=4
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:4
 #SBATCH --mem=48G
 #SBATCH --time=24:00:00
@@ -69,13 +69,14 @@ echo ""
 srun python src/train.py \
     experiment=baseline \
     dataset.d=19 \
-    dataset.rounds_max=19 \
+    dataset.rounds=19 \
     dataset.mwpm_filter=false \
-    dataset.chunking=[1,1,1] \
+    model.compile.enabled=true \
+    model.compile.dynamic=false \
     model.architecture=resnet50 \
     model.embedding_dim=128 \
     model.channel_multipliers=[2,2.5,3,3.5] \
-    training.lr=2e-4 \
+    training.lr=1e-3 \
     training.batch_size=null \
     training.log_every_n_steps=100 \
     training.checkpoint_every_minutes=15 \
@@ -87,11 +88,11 @@ srun python src/train.py \
     hardware.strategy=ddp \
     hardware.num_nodes=2 \
     hardware.sync_batchnorm=true \
-    hardware.num_workers=16 \
+    hardware.num_workers=6 \
     hardware.prefetch_factor=4 \
     hardware.persistent_workers=true \
     curriculum.enabled=true \
-    curriculum.stage1_p=0.5 \
+    curriculum.stage1_p=1.0 \
     curriculum.stage1_steps=60000 \
     curriculum.stage2_p_end=2.1 \
     curriculum.stage2_steps=100000 \

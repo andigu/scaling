@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=d15-decay
+#SBATCH --job-name=bb6-curriculum
 #SBATCH --partition=gpu_requeue
 #SBATCH --constraint="h100"
-#SBATCH --cpus-per-gpu=16
+#SBATCH --cpus-per-gpu=6
 #SBATCH --gres=gpu:4
 #SBATCH --mem=48G
 #SBATCH --time=24:00:00
 #SBATCH --requeue
-#SBATCH --output=/n/netscratch/yelin_lab/Everyone/andigu/scaling/d15-decay/slurm_%j.out
-#SBATCH --error=/n/netscratch/yelin_lab/Everyone/andigu/scaling/d15-decay/slurm_%j.err
+#SBATCH --output=/n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-curriculum/slurm_%j.out
+#SBATCH --error=/n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-curriculum/slurm_%j.err
 
 set -e
 
@@ -16,7 +16,7 @@ echo "=== Starting Large-Scale Curriculum Learning: d19 ==="
 echo "Time: $(date)"
 echo "Node: $SLURM_NODELIST"
 echo "Job ID: $SLURM_JOB_ID"
-echo "Experiment: d15-decay"
+echo "Experiment: bb6-curriculum"
 echo "Purpose: Full-scale 3-stage curriculum learning pipeline"
 echo "Distance: 19 (production scale)"
 echo "GPUs: 4x H100"
@@ -25,7 +25,7 @@ echo "Duration: ~24 hours for 500k steps"
 echo ""
 
 # Create experiment output directory
-mkdir -p /n/netscratch/yelin_lab/Everyone/andigu/scaling/d15-decay
+mkdir -p /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-curriculum
 
 # Setup environment
 source ~/.bashrc
@@ -55,15 +55,14 @@ echo ""
 
 python src/train.py \
     experiment=baseline \
-    dataset.d=15 \
-    dataset.rounds_max=15 \
+    dataset.l=6 \
+    dataset.m=6 \
+    dataset.rounds=6 \
     dataset.mwpm_filter=false \
-    dataset.chunking=[1,1,1] \
     model.architecture=resnet50 \
     model.embedding_dim=128 \
     model.channel_multipliers=[2,2.5,3,3.5] \
-    training.lr=2e-4 \
-    training.weight_decay=2.5e-4 \
+    training.lr=1e-3 \
     training.batch_size=null \
     training.log_every_n_steps=100 \
     training.checkpoint_every_minutes=15 \
@@ -75,16 +74,16 @@ python src/train.py \
     hardware.strategy=auto \
     hardware.num_nodes=1 \
     hardware.sync_batchnorm=true \
-    hardware.num_workers=16 \
+    hardware.num_workers=6 \
     hardware.prefetch_factor=4 \
     hardware.persistent_workers=true \
     curriculum.enabled=true \
     curriculum.stage1_p=0.5 \
     curriculum.stage1_steps=50000 \
-    curriculum.stage2_p_end=2.1 \
-    curriculum.stage2_steps=50000 \
+    curriculum.stage2_p_end=1.5 \
+    curriculum.stage2_steps=100000 \
     curriculum.stage3_steps=100000 \
-    experiment.name=d15-decay \
+    experiment.name=bb6-curriculum \
     wandb.enabled=true \
     wandb.project=scaling
 
