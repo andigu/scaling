@@ -95,14 +95,14 @@ class TemporalSurfaceCodeDataset(IterableDataset):
 
         # Populate detector array
         time, x, y = det['time'].values, det['pos_x'].values, det['pos_y'].values
-        det_id = det['syndrome_id'].values[None,:]
-        det_value = detectors[:, det['detector_id']] * (det_id.max()+1) + det_id
+        det_id = det['check_type'].values[None,:]
+        det_value = detectors[:, det['detector_id']]# * (det_id.max()+1) + det_id
         det_array[:, time, x, y] = (det_value + 1)
 
         return det_array, logical_errors.astype(np.float32), (rounds, p)
     
     def get_num_embeddings(self):
-        return 2*(self.d**2 - 1)+1
+        return 3
         
     def __iter__(self):
         """Generate infinite stream of surface code data batches."""

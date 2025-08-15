@@ -4475,3 +4475,496 @@ Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especiall
 [2025-08-14 18:18:21,897][__main__][INFO] - Skipping wandb.watch() due to torch.compile compatibility
 [2025-08-14 18:18:22,334][__main__][INFO] - === STARTING TRAINING ===
 [2025-08-14 18:18:22,358][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=358
+[2025-08-14 18:50:27,650][__main__][INFO] - === STARTING EXPERIMENT: d9-by-check-type ===
+[2025-08-14 18:50:27,650][__main__][INFO] - PID: 1103567
+[2025-08-14 18:50:27,650][__main__][INFO] - SLURM_JOB_ID: 30182809
+[2025-08-14 18:50:27,650][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 18:50:27,650][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 18:50:27,650][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 18:50:27,651][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 18:50:27,651][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 18:50:27,651][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 18:50:27,651][__main__][INFO] - SLURM_NODELIST: holygpu7c26201
+[2025-08-14 18:50:27,651][__main__][INFO] - Architecture: resnet50
+[2025-08-14 18:50:27,651][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 18:50:27,651][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 18:50:27,651][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 18:50:27,651][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 18:50:27,651][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 18:50:27,651][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 18:50:27,651][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 18:50:27,651][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 18:50:27,652][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-14 18:50:27,652][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-14 18:50:27,652][__main__][INFO] - Use LSTM: False
+[2025-08-14 18:50:27,652][__main__][INFO] - Num Embeddings: 5
+[2025-08-14 18:50:27,652][__main__][INFO] - Dataset: code_type=surface_code, d=9, rounds=9, p=1.0
+[2025-08-14 18:50:27,652][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 18:50:27,652][__main__][INFO] - Accelerator: auto
+[2025-08-14 18:50:27,652][__main__][INFO] - Devices per node: auto
+[2025-08-14 18:50:27,652][__main__][INFO] - Num Nodes: 1
+[2025-08-14 18:50:27,652][__main__][INFO] - Total Devices: 1
+[2025-08-14 18:50:27,652][__main__][INFO] - Strategy: auto
+[2025-08-14 18:50:27,652][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 18:50:27,652][__main__][INFO] - MWPM filtering: False
+[2025-08-14 18:50:27,653][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 18:50:27,653][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 18:50:27,653][__main__][INFO] - Max Steps: 50000
+[2025-08-14 18:50:27,653][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 18:50:27,653][__main__][INFO] - Log every 100 steps
+[2025-08-14 18:50:27,653][__main__][INFO] - Num Workers: 8
+[2025-08-14 18:50:27,653][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 18:50:27,653][__main__][INFO] - Persistent Workers: True
+[2025-08-14 18:50:27,653][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/d9-by-check-type
+[2025-08-14 18:50:27,671][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-14 18:50:27,671][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 18:50:29,594][__main__][INFO] - Saved new W&B run ID to file: 8msgl1l3
+[2025-08-14 18:50:29,665][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 18:50:29,666][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 18:50:29,758][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 18:50:29,778][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 18:50:30,615][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=2
+[2025-08-14 18:51:05,967][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=4
+[2025-08-14 18:51:27,403][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=8
+[2025-08-14 18:51:51,316][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=16
+[2025-08-14 18:52:13,502][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=32
+[2025-08-14 18:52:37,473][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=64
+[2025-08-14 18:53:03,111][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=128
+[2025-08-14 18:53:30,685][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=256
+[2025-08-14 18:53:58,087][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=512
+[2025-08-14 18:54:17,074][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=384
+[2025-08-14 18:54:48,019][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=448
+[2025-08-14 18:55:17,392][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=416
+[2025-08-14 18:55:46,435][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=400
+[2025-08-14 18:56:16,530][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=392
+[2025-08-14 18:56:46,024][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=388
+[2025-08-14 18:57:17,664][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=390
+[2025-08-14 18:57:49,368][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=389
+[2025-08-14 18:58:22,691][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=388
+[2025-08-14 18:58:28,308][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=388
+[2025-08-14 18:58:29,737][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-14 18:58:29,918][__main__][INFO] - Found optimal batch size 388
+[2025-08-14 18:58:29,931][__main__][INFO] - Saved batch size 358 to file
+[2025-08-14 18:58:29,932][__main__][INFO] - Optimal per-GPU batch size found: 358
+[2025-08-14 18:58:29,932][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 358
+[2025-08-14 18:58:29,937][__main__][INFO] - Saved metadata: {'timestamp': 1755212309.9325268, 'slurm_job_id': '30182809', 'batch_size': 358, 'num_devices': 1, 'effective_batch_size': 358}
+[2025-08-14 18:58:29,940][__main__][INFO] - Skipping wandb.watch() due to torch.compile compatibility
+[2025-08-14 18:58:30,378][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-14 18:58:30,406][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=358
+[2025-08-14 20:13:49,045][__main__][INFO] - === STARTING EXPERIMENT: d9-all-same ===
+[2025-08-14 20:13:49,045][__main__][INFO] - PID: 3298350
+[2025-08-14 20:13:49,045][__main__][INFO] - SLURM_JOB_ID: 30232335
+[2025-08-14 20:13:49,045][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 20:13:49,045][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 20:13:49,045][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 20:13:49,046][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 20:13:49,046][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 20:13:49,046][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 20:13:49,046][__main__][INFO] - SLURM_NODELIST: holygpu7c26105
+[2025-08-14 20:13:49,046][__main__][INFO] - Architecture: resnet50
+[2025-08-14 20:13:49,046][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 20:13:49,046][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 20:13:49,046][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 20:13:49,046][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 20:13:49,046][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 20:13:49,046][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 20:13:49,046][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 20:13:49,046][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 20:13:49,046][__main__][INFO] - Stage3 Stride: [1, 1, 1]
+[2025-08-14 20:13:49,047][__main__][INFO] - Stage4 Stride: [1, 1, 1]
+[2025-08-14 20:13:49,047][__main__][INFO] - Use LSTM: False
+[2025-08-14 20:13:49,047][__main__][INFO] - Num Embeddings: 3
+[2025-08-14 20:13:49,047][__main__][INFO] - Dataset: code_type=surface_code, d=9, rounds=9, p=1.0
+[2025-08-14 20:13:49,047][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 20:13:49,047][__main__][INFO] - Accelerator: auto
+[2025-08-14 20:13:49,047][__main__][INFO] - Devices per node: auto
+[2025-08-14 20:13:49,047][__main__][INFO] - Num Nodes: 1
+[2025-08-14 20:13:49,047][__main__][INFO] - Total Devices: 1
+[2025-08-14 20:13:49,047][__main__][INFO] - Strategy: auto
+[2025-08-14 20:13:49,047][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 20:13:49,047][__main__][INFO] - MWPM filtering: False
+[2025-08-14 20:13:49,047][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 20:13:49,048][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 20:13:49,048][__main__][INFO] - Max Steps: 50000
+[2025-08-14 20:13:49,048][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 20:13:49,048][__main__][INFO] - Log every 100 steps
+[2025-08-14 20:13:49,048][__main__][INFO] - Num Workers: 8
+[2025-08-14 20:13:49,048][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 20:13:49,048][__main__][INFO] - Persistent Workers: True
+[2025-08-14 20:13:49,048][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/d9-all-same
+[2025-08-14 20:13:49,066][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-14 20:13:49,066][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 20:13:51,056][__main__][INFO] - Saved new W&B run ID to file: o1s3e4n4
+[2025-08-14 20:13:51,126][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 20:13:51,126][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 20:13:51,224][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 20:13:51,244][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 20:13:52,188][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=2
+[2025-08-14 20:14:29,398][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=4
+[2025-08-14 20:14:52,381][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=8
+[2025-08-14 20:15:17,917][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=16
+[2025-08-14 20:15:41,910][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=32
+[2025-08-14 20:16:08,415][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=64
+[2025-08-14 20:16:36,620][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=128
+[2025-08-14 20:17:07,258][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=256
+[2025-08-14 20:17:39,092][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=512
+[2025-08-14 20:18:00,017][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=384
+[2025-08-14 20:18:34,826][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=448
+[2025-08-14 20:19:06,560][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=416
+[2025-08-14 20:19:41,502][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=400
+[2025-08-14 20:20:16,643][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=392
+[2025-08-14 20:20:48,449][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=388
+[2025-08-14 20:21:24,221][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=390
+[2025-08-14 20:21:58,815][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=389
+[2025-08-14 20:22:34,633][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=388
+[2025-08-14 20:22:40,417][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=388
+[2025-08-14 20:22:41,816][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-14 20:22:41,981][__main__][INFO] - Found optimal batch size 388
+[2025-08-14 20:22:41,989][__main__][INFO] - Saved batch size 358 to file
+[2025-08-14 20:22:41,989][__main__][INFO] - Optimal per-GPU batch size found: 358
+[2025-08-14 20:22:41,989][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 358
+[2025-08-14 20:22:41,995][__main__][INFO] - Saved metadata: {'timestamp': 1755217361.9898193, 'slurm_job_id': '30232335', 'batch_size': 358, 'num_devices': 1, 'effective_batch_size': 358}
+[2025-08-14 20:22:41,998][__main__][INFO] - Skipping wandb.watch() due to torch.compile compatibility
+[2025-08-14 20:22:42,409][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-14 20:22:42,432][data_module][INFO] - Created dataset (TemporalSurfaceCodeDataset): l=6, m=6, d=9, rounds=9, p=1.0, batch_size=358
+[2025-08-14 21:32:31,297][__main__][INFO] - === STARTING EXPERIMENT: bb6-05-all-same ===
+[2025-08-14 21:32:31,297][__main__][INFO] - PID: 3873243
+[2025-08-14 21:32:31,297][__main__][INFO] - SLURM_JOB_ID: 30199015
+[2025-08-14 21:32:31,297][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 21:32:31,297][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 21:32:31,297][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 21:32:31,297][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 21:32:31,297][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 21:32:31,297][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 21:32:31,297][__main__][INFO] - SLURM_NODELIST: holygpu8a22601
+[2025-08-14 21:32:31,297][__main__][INFO] - Architecture: rgcn50
+[2025-08-14 21:32:31,297][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 21:32:31,297][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 21:32:31,298][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 21:32:31,298][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 21:32:31,298][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 21:32:31,298][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 21:32:31,298][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 21:32:31,298][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 21:32:31,930][__main__][INFO] - Num Relations: 66
+[2025-08-14 21:32:31,930][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-14 21:32:31,930][__main__][INFO] - Num Embeddings: 4
+[2025-08-14 21:32:31,930][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds=7, p=0.5
+[2025-08-14 21:32:31,930][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 21:32:31,956][__main__][INFO] - Accelerator: auto
+[2025-08-14 21:32:31,956][__main__][INFO] - Devices per node: auto
+[2025-08-14 21:32:31,956][__main__][INFO] - Num Nodes: 1
+[2025-08-14 21:32:31,956][__main__][INFO] - Total Devices: 1
+[2025-08-14 21:32:31,956][__main__][INFO] - Strategy: auto
+[2025-08-14 21:32:31,956][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 21:32:31,956][__main__][INFO] - MWPM filtering: False
+[2025-08-14 21:32:31,956][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 21:32:31,957][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 21:32:31,957][__main__][INFO] - Max Steps: 50000
+[2025-08-14 21:32:31,957][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 21:32:31,957][__main__][INFO] - Log every 100 steps
+[2025-08-14 21:32:31,957][__main__][INFO] - Num Workers: 6
+[2025-08-14 21:32:31,957][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 21:32:31,957][__main__][INFO] - Persistent Workers: True
+[2025-08-14 21:32:31,957][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-05-all-same
+[2025-08-14 21:32:31,977][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-14 21:32:31,977][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 21:32:33,986][__main__][INFO] - Saved new W&B run ID to file: pkaemtm1
+[2025-08-14 21:32:34,575][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 21:32:34,576][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 21:32:34,665][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 21:32:34,684][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 21:32:36,398][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=2
+[2025-08-14 21:36:44,860][__main__][INFO] - === STARTING EXPERIMENT: bb6-05-all-same ===
+[2025-08-14 21:36:44,860][__main__][INFO] - PID: 3874318
+[2025-08-14 21:36:44,860][__main__][INFO] - SLURM_JOB_ID: 30199015
+[2025-08-14 21:36:44,860][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 21:36:44,860][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 21:36:44,860][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 21:36:44,860][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 21:36:44,860][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 21:36:44,860][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 21:36:44,860][__main__][INFO] - SLURM_NODELIST: holygpu8a22601
+[2025-08-14 21:36:44,860][__main__][INFO] - Architecture: rgcn50
+[2025-08-14 21:36:44,860][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 21:36:44,860][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 21:36:44,860][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 21:36:44,861][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 21:36:44,861][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 21:36:44,861][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 21:36:44,861][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 21:36:44,861][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 21:36:45,484][__main__][INFO] - Num Relations: 66
+[2025-08-14 21:36:45,485][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-14 21:36:45,485][__main__][INFO] - Num Embeddings: 4
+[2025-08-14 21:36:45,485][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds=7, p=0.5
+[2025-08-14 21:36:45,485][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 21:36:45,508][__main__][INFO] - Accelerator: auto
+[2025-08-14 21:36:45,508][__main__][INFO] - Devices per node: auto
+[2025-08-14 21:36:45,508][__main__][INFO] - Num Nodes: 1
+[2025-08-14 21:36:45,508][__main__][INFO] - Total Devices: 1
+[2025-08-14 21:36:45,508][__main__][INFO] - Strategy: auto
+[2025-08-14 21:36:45,508][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 21:36:45,508][__main__][INFO] - MWPM filtering: False
+[2025-08-14 21:36:45,508][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 21:36:45,509][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 21:36:45,509][__main__][INFO] - Max Steps: 50000
+[2025-08-14 21:36:45,509][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 21:36:45,509][__main__][INFO] - Log every 100 steps
+[2025-08-14 21:36:45,509][__main__][INFO] - Num Workers: 6
+[2025-08-14 21:36:45,509][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 21:36:45,509][__main__][INFO] - Persistent Workers: True
+[2025-08-14 21:36:45,509][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-05-all-same
+[2025-08-14 21:36:45,518][__main__][INFO] - Loaded W&B run ID from file: pkaemtm1
+[2025-08-14 21:36:45,519][__main__][INFO] - Setting up W&B logger with existing run ID: pkaemtm1
+[2025-08-14 21:36:45,519][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 21:36:46,093][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 21:36:46,093][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 21:36:46,183][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 21:36:46,204][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 21:36:47,913][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=2
+[2025-08-14 21:37:26,897][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=4
+[2025-08-14 21:37:54,402][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=8
+[2025-08-14 21:38:22,043][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=16
+[2025-08-14 21:38:49,309][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=32
+[2025-08-14 21:39:17,658][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=64
+[2025-08-14 21:39:46,260][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=128
+[2025-08-14 21:40:16,340][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=256
+[2025-08-14 21:40:46,570][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=512
+[2025-08-14 21:41:17,199][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=384
+[2025-08-14 21:41:49,727][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=448
+[2025-08-14 21:42:23,239][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=480
+[2025-08-14 21:42:55,637][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=464
+[2025-08-14 21:43:28,828][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=456
+[2025-08-14 21:44:03,567][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=452
+[2025-08-14 21:44:44,721][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=454
+[2025-08-14 21:45:26,584][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=455
+[2025-08-14 21:46:19,394][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=455
+[2025-08-14 21:46:21,898][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-14 21:46:22,124][__main__][INFO] - Found optimal batch size 455
+[2025-08-14 21:46:22,137][__main__][INFO] - Saved batch size 425 to file
+[2025-08-14 21:46:22,138][__main__][INFO] - Optimal per-GPU batch size found: 425
+[2025-08-14 21:46:22,138][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 425
+[2025-08-14 21:46:22,142][__main__][INFO] - Saved metadata: {'timestamp': 1755222382.1382387, 'slurm_job_id': '30199015', 'batch_size': 425, 'num_devices': 1, 'effective_batch_size': 425}
+[2025-08-14 21:48:31,665][__main__][INFO] - === STARTING EXPERIMENT: bb6-05-all-same ===
+[2025-08-14 21:48:31,665][__main__][INFO] - PID: 3883711
+[2025-08-14 21:48:31,665][__main__][INFO] - SLURM_JOB_ID: 30199015
+[2025-08-14 21:48:31,665][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 21:48:31,665][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 21:48:31,666][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 21:48:31,666][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 21:48:31,666][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 21:48:31,666][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 21:48:31,666][__main__][INFO] - SLURM_NODELIST: holygpu8a22601
+[2025-08-14 21:48:31,666][__main__][INFO] - Architecture: rgcn50
+[2025-08-14 21:48:31,666][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 21:48:31,666][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 21:48:31,666][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 21:48:31,666][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 21:48:31,666][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 21:48:31,666][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 21:48:31,666][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 21:48:31,666][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 21:48:32,292][__main__][INFO] - Num Relations: 66
+[2025-08-14 21:48:32,292][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-14 21:48:32,292][__main__][INFO] - Num Embeddings: 4
+[2025-08-14 21:48:32,293][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds=7, p=0.5
+[2025-08-14 21:48:32,293][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 21:48:32,316][__main__][INFO] - Accelerator: auto
+[2025-08-14 21:48:32,316][__main__][INFO] - Devices per node: auto
+[2025-08-14 21:48:32,316][__main__][INFO] - Num Nodes: 1
+[2025-08-14 21:48:32,316][__main__][INFO] - Total Devices: 1
+[2025-08-14 21:48:32,316][__main__][INFO] - Strategy: auto
+[2025-08-14 21:48:32,316][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 21:48:32,316][__main__][INFO] - MWPM filtering: False
+[2025-08-14 21:48:32,316][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 21:48:32,317][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 21:48:32,317][__main__][INFO] - Max Steps: 50000
+[2025-08-14 21:48:32,317][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 21:48:32,317][__main__][INFO] - Log every 100 steps
+[2025-08-14 21:48:32,317][__main__][INFO] - Num Workers: 6
+[2025-08-14 21:48:32,317][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 21:48:32,317][__main__][INFO] - Persistent Workers: True
+[2025-08-14 21:48:32,317][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-05-all-same
+[2025-08-14 21:48:32,339][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-14 21:48:32,339][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 21:48:34,300][__main__][INFO] - Saved new W&B run ID to file: y7ardk52
+[2025-08-14 21:48:34,883][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 21:48:34,884][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 21:48:34,973][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 21:48:34,994][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 21:48:36,745][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=2
+[2025-08-14 21:48:53,716][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=4
+[2025-08-14 21:48:57,641][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=8
+[2025-08-14 21:49:01,618][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=16
+[2025-08-14 21:49:05,720][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=32
+[2025-08-14 21:49:10,082][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=64
+[2025-08-14 21:49:14,832][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=128
+[2025-08-14 21:49:20,339][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=256
+[2025-08-14 21:49:27,307][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=512
+[2025-08-14 21:49:31,379][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=384
+[2025-08-14 21:49:39,736][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=448
+[2025-08-14 21:49:44,414][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=416
+[2025-08-14 21:50:16,427][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=432
+[2025-08-14 21:50:48,288][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=440
+[2025-08-14 21:51:16,854][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=436
+[2025-08-14 21:51:54,755][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=438
+[2025-08-14 21:52:34,194][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=439
+[2025-08-14 21:53:21,568][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=439
+[2025-08-14 21:53:23,878][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-14 21:53:24,098][__main__][INFO] - Found optimal batch size 439
+[2025-08-14 21:53:24,111][__main__][INFO] - Saved batch size 409 to file
+[2025-08-14 21:53:24,111][__main__][INFO] - Optimal per-GPU batch size found: 409
+[2025-08-14 21:53:24,112][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 409
+[2025-08-14 21:53:24,115][__main__][INFO] - Saved metadata: {'timestamp': 1755222804.1122553, 'slurm_job_id': '30199015', 'batch_size': 409, 'num_devices': 1, 'effective_batch_size': 409}
+[2025-08-14 21:53:24,118][__main__][INFO] - Skipping wandb.watch() due to torch.compile compatibility
+[2025-08-14 21:53:24,561][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-14 21:53:24,974][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=409
+[2025-08-14 22:04:18,209][__main__][INFO] - === STARTING EXPERIMENT: bb6-05-all-diff ===
+[2025-08-14 22:04:18,209][__main__][INFO] - PID: 3893634
+[2025-08-14 22:04:18,209][__main__][INFO] - SLURM_JOB_ID: 30199015
+[2025-08-14 22:04:18,209][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 22:04:18,209][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 22:04:18,209][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 22:04:18,209][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 22:04:18,209][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 22:04:18,209][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 22:04:18,209][__main__][INFO] - SLURM_NODELIST: holygpu8a22601
+[2025-08-14 22:04:18,209][__main__][INFO] - Architecture: rgcn50
+[2025-08-14 22:04:18,210][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 22:04:18,210][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 22:04:18,210][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 22:04:18,210][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 22:04:18,210][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 22:04:18,210][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 22:04:18,210][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 22:04:18,210][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 22:04:18,834][__main__][INFO] - Num Relations: 66
+[2025-08-14 22:04:18,835][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-14 22:04:18,910][__main__][INFO] - Num Embeddings: 1080
+[2025-08-14 22:04:18,911][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds=7, p=0.5
+[2025-08-14 22:04:18,911][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 22:04:18,934][__main__][INFO] - Accelerator: auto
+[2025-08-14 22:04:18,934][__main__][INFO] - Devices per node: auto
+[2025-08-14 22:04:18,934][__main__][INFO] - Num Nodes: 1
+[2025-08-14 22:04:18,934][__main__][INFO] - Total Devices: 1
+[2025-08-14 22:04:18,934][__main__][INFO] - Strategy: auto
+[2025-08-14 22:04:18,934][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 22:04:18,934][__main__][INFO] - MWPM filtering: False
+[2025-08-14 22:04:18,934][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 22:04:18,935][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 22:04:18,935][__main__][INFO] - Max Steps: 50000
+[2025-08-14 22:04:18,935][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 22:04:18,935][__main__][INFO] - Log every 100 steps
+[2025-08-14 22:04:18,935][__main__][INFO] - Num Workers: 6
+[2025-08-14 22:04:18,935][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 22:04:18,935][__main__][INFO] - Persistent Workers: True
+[2025-08-14 22:04:18,935][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-05-all-diff
+[2025-08-14 22:04:18,966][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-14 22:04:18,966][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 22:04:20,957][__main__][INFO] - Saved new W&B run ID to file: 7gegzltm
+[2025-08-14 22:04:21,608][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 22:04:21,608][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 22:04:21,698][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 22:04:21,720][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 22:04:23,430][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=2
+[2025-08-14 22:04:40,688][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=4
+[2025-08-14 22:04:44,515][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=8
+[2025-08-14 22:04:48,423][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=16
+[2025-08-14 22:04:52,445][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=32
+[2025-08-14 22:04:56,926][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=64
+[2025-08-14 22:05:01,545][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=128
+[2025-08-14 22:05:06,891][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=256
+[2025-08-14 22:05:13,803][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=512
+[2025-08-14 22:05:17,883][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=384
+[2025-08-14 22:05:26,148][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=448
+[2025-08-14 22:05:30,723][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=416
+[2025-08-14 22:05:39,370][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=432
+[2025-08-14 22:05:48,322][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=440
+[2025-08-14 22:05:52,804][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=436
+[2025-08-14 22:06:25,933][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=438
+[2025-08-14 22:06:59,173][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=439
+[2025-08-14 22:07:33,727][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=439
+[2025-08-14 22:07:35,918][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-14 22:07:36,098][__main__][INFO] - Found optimal batch size 439
+[2025-08-14 22:07:36,118][__main__][INFO] - Saved batch size 409 to file
+[2025-08-14 22:07:36,119][__main__][INFO] - Optimal per-GPU batch size found: 409
+[2025-08-14 22:07:36,119][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 409
+[2025-08-14 22:07:36,126][__main__][INFO] - Saved metadata: {'timestamp': 1755223656.1194742, 'slurm_job_id': '30199015', 'batch_size': 409, 'num_devices': 1, 'effective_batch_size': 409}
+[2025-08-14 22:07:36,129][__main__][INFO] - Skipping wandb.watch() due to torch.compile compatibility
+[2025-08-14 22:07:36,566][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-14 22:07:36,982][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=409
+[2025-08-14 22:16:31,233][__main__][INFO] - === STARTING EXPERIMENT: bb6-05-space-diff ===
+[2025-08-14 22:16:31,233][__main__][INFO] - PID: 3897309
+[2025-08-14 22:16:31,233][__main__][INFO] - SLURM_JOB_ID: 30199015
+[2025-08-14 22:16:31,233][__main__][INFO] - NODE_RANK: unknown
+[2025-08-14 22:16:31,233][__main__][INFO] - WORLD_SIZE: unknown
+[2025-08-14 22:16:31,233][__main__][INFO] - MASTER_ADDR: unknown
+[2025-08-14 22:16:31,233][__main__][INFO] - MASTER_PORT: unknown
+[2025-08-14 22:16:31,233][__main__][INFO] - SLURM_NODEID: 0
+[2025-08-14 22:16:31,233][__main__][INFO] - SLURM_NNODES: 1
+[2025-08-14 22:16:31,233][__main__][INFO] - SLURM_NODELIST: holygpu8a22601
+[2025-08-14 22:16:31,234][__main__][INFO] - Architecture: rgcn50
+[2025-08-14 22:16:31,234][__main__][INFO] - Embedding Dim: 64
+[2025-08-14 22:16:31,234][__main__][INFO] - Learning Rate: 0.001
+[2025-08-14 22:16:31,234][__main__][INFO] - Weight Decay: 0.0
+[2025-08-14 22:16:31,234][__main__][INFO] - Optimizer: schedulefree
+[2025-08-14 22:16:31,234][__main__][INFO] - Gradient Clip Val: 1.0
+[2025-08-14 22:16:31,234][__main__][INFO] - Gradient Clip Algorithm: norm
+[2025-08-14 22:16:31,234][__main__][INFO] - Accumulate Grad Batches: 1
+[2025-08-14 22:16:31,234][__main__][INFO] - Channel Multipliers: [2, 4, 8, 16]
+[2025-08-14 22:16:31,860][__main__][INFO] - Num Relations: 66
+[2025-08-14 22:16:31,861][__main__][INFO] - Num Logical Qubits: 12
+[2025-08-14 22:16:31,936][__main__][INFO] - Num Embeddings: 144
+[2025-08-14 22:16:31,936][__main__][INFO] - Dataset: code_type=bivariate_bicycle, l=6, m=6, rounds=7, p=0.5
+[2025-08-14 22:16:31,936][__main__][INFO] - Standard training (no curriculum)
+[2025-08-14 22:16:31,950][__main__][INFO] - Accelerator: auto
+[2025-08-14 22:16:31,950][__main__][INFO] - Devices per node: auto
+[2025-08-14 22:16:31,950][__main__][INFO] - Num Nodes: 1
+[2025-08-14 22:16:31,950][__main__][INFO] - Total Devices: 1
+[2025-08-14 22:16:31,950][__main__][INFO] - Strategy: auto
+[2025-08-14 22:16:31,950][__main__][INFO] - Sync BatchNorm: True
+[2025-08-14 22:16:31,950][__main__][INFO] - MWPM filtering: False
+[2025-08-14 22:16:31,950][__main__][INFO] - Batch Size: auto-tuned
+[2025-08-14 22:16:31,951][__main__][INFO] - Precision: bf16-mixed
+[2025-08-14 22:16:31,951][__main__][INFO] - Max Steps: 50000
+[2025-08-14 22:16:31,951][__main__][INFO] - Checkpoint every 15 minutes
+[2025-08-14 22:16:31,951][__main__][INFO] - Log every 100 steps
+[2025-08-14 22:16:31,951][__main__][INFO] - Num Workers: 6
+[2025-08-14 22:16:31,951][__main__][INFO] - Prefetch Factor: 4
+[2025-08-14 22:16:31,951][__main__][INFO] - Persistent Workers: True
+[2025-08-14 22:16:31,951][__main__][INFO] - Experiment directory: /n/netscratch/yelin_lab/Everyone/andigu/scaling/bb6-05-space-diff
+[2025-08-14 22:16:31,970][__main__][INFO] - Setting up new W&B logger (W&B will assign run ID)
+[2025-08-14 22:16:31,970][__main__][INFO] - Initializing wandb logger with params
+[2025-08-14 22:16:33,910][__main__][INFO] - Saved new W&B run ID to file: a4notjzj
+[2025-08-14 22:16:34,559][__main__][INFO] - Compiling model with mode='default', fullgraph=True, dynamic=False
+[2025-08-14 22:16:34,560][__main__][INFO] - Set torch._dynamo.config.cache_size_limit=64 to handle batch size tuning recompilations
+[2025-08-14 22:16:34,651][__main__][INFO] - Model compilation enabled - first batch will be slower due to compilation overhead
+[2025-08-14 22:16:34,671][__main__][INFO] - === AUTO-TUNING BATCH SIZE (RANK 0) ===
+[2025-08-14 22:16:36,377][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=2
+[2025-08-14 22:16:53,625][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=4
+[2025-08-14 22:16:57,449][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=8
+[2025-08-14 22:17:01,380][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=16
+[2025-08-14 22:17:05,402][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=32
+[2025-08-14 22:17:09,647][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=64
+[2025-08-14 22:17:14,259][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=128
+[2025-08-14 22:17:19,556][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=256
+[2025-08-14 22:17:26,502][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=512
+[2025-08-14 22:17:30,460][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=384
+[2025-08-14 22:17:38,679][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=448
+[2025-08-14 22:17:43,284][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=416
+[2025-08-14 22:18:15,430][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=432
+[2025-08-14 22:18:47,427][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=440
+[2025-08-14 22:19:19,274][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=444
+[2025-08-14 22:19:52,412][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=446
+[2025-08-14 22:20:27,476][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=447
+[2025-08-14 22:21:05,572][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=447
+[2025-08-14 22:21:07,777][__main__][INFO] - Model loaded from checkpoint at global step 0
+[2025-08-14 22:21:07,965][__main__][INFO] - Found optimal batch size 447
+[2025-08-14 22:21:07,979][__main__][INFO] - Saved batch size 417 to file
+[2025-08-14 22:21:07,979][__main__][INFO] - Optimal per-GPU batch size found: 417
+[2025-08-14 22:21:07,979][__main__][INFO] - Effective total batch size across 1 device(s) on 1 node(s) with 1 accumulation steps: 417
+[2025-08-14 22:21:07,985][__main__][INFO] - Saved metadata: {'timestamp': 1755224467.979718, 'slurm_job_id': '30199015', 'batch_size': 417, 'num_devices': 1, 'effective_batch_size': 417}
+[2025-08-14 22:21:07,988][__main__][INFO] - Skipping wandb.watch() due to torch.compile compatibility
+[2025-08-14 22:21:08,427][__main__][INFO] - === STARTING TRAINING ===
+[2025-08-14 22:21:08,847][data_module][INFO] - Created dataset (BivariateBicycleDataset): l=6, m=6, d=9, rounds=7, p=0.5, batch_size=417
