@@ -31,4 +31,10 @@ dependencies = [
     "numba==0.61.2",
     "galois>=0.4.6",
     "ninja>=1.13.0",
+    "umap-learn>=0.5.9.post2",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.30.0",
 ]

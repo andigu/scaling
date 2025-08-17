@@ -87,7 +87,7 @@ srun python src/train.py \
     hardware.devices=4 \
     hardware.strategy=ddp \
     hardware.num_nodes=2 \
-    hardware.sync_batchnorm=true \
+    hardware.sync_batchnorm=false \
     hardware.num_workers=6 \
     hardware.prefetch_factor=4 \
     hardware.persistent_workers=true \

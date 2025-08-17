@@ -183,7 +183,7 @@ class ResNet3DTrainer(L.LightningModule):
                     p=cfg.dataset.p,
                     batch_size=1  # Minimal size for initialization
                 )
-                num_logical_qubits = temp_dataset.get_num_logical_qubits()
+                num_logical_qubits = temp_dataset.num_logical_qubits
                 num_embeddings = temp_dataset.get_num_embeddings()
             else:
                 # For surface code with RGCN (if that's ever used)
@@ -197,10 +197,7 @@ class ResNet3DTrainer(L.LightningModule):
                 num_logical_qubits = 1  # Default for surface codes
                 num_embeddings = temp_dataset.get_num_embeddings()
             
-            # Get static graph structure (required for RGCN)
-            if not hasattr(temp_dataset, 'get_graph'):
-                raise ValueError("BivariateBicycleDataset must have get_graph method for RGCN")
-            static_graph = temp_dataset.get_graph()
+            static_graph = np.copy(temp_dataset.graph)
             
             self.model = RGCN(
                 architecture=cfg.model.architecture,
@@ -470,9 +467,6 @@ def train_experiment(cfg: DictConfig):
                 p=cfg.dataset.p,
                 batch_size=1
             )
-            log.info(f"Num Relations: {temp_dataset.get_neighborhood_size()}")
-            log.info(f"Num Logical Qubits: {temp_dataset.get_num_logical_qubits()}")
-            log.info(f"Num Embeddings: {temp_dataset.get_num_embeddings()}")
         else:
             temp_dataset = dataset_class(
                 d=cfg.dataset.d,
@@ -677,7 +671,7 @@ def train_experiment(cfg: DictConfig):
                 model.reset_metrics()
                 
                 # Use tuned batch size
-                batch_size = max(math.floor(temp_data_module.batch_size * 0.9), temp_data_module.batch_size-30)
+                batch_size = math.floor(temp_data_module.batch_size * 0.9)
                 
                 # Save batch size for other ranks
                 batch_size_file.write_text(str(batch_size))

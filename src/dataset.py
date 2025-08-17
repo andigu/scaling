@@ -102,7 +102,7 @@ class TemporalSurfaceCodeDataset(IterableDataset):
         return det_array, logical_errors.astype(np.float32), (rounds, p)
     
     def get_num_embeddings(self):
-        return 3
+        return 2
         
     def __iter__(self):
         """Generate infinite stream of surface code data batches."""

@@ -37,8 +37,7 @@ class RGCN(nn.Module):
         # Extract neighbors from graph structure: graph[..., 1] contains neighbor indices
         # Derive neighborhood_size from the graph shape
         self.neighborhood_size = static_graph.shape[1]
-        static_neighbors = torch.tensor(static_graph[..., 1], dtype=torch.long)
-        self.register_buffer('static_neighbors', static_neighbors)
+        self.register_buffer('static_neighbors', torch.tensor(static_graph, dtype=torch.int32))
         
         self.embedding_dim = embedding_dim
         self.num_logical_qubits = num_logical_qubits
@@ -71,7 +70,7 @@ class RGCN(nn.Module):
         # Input embedding layer for detector states
         if num_embeddings is None:
             raise ValueError("num_embeddings is required")
-        self.embedding = nn.Embedding(num_embeddings, embedding_dim)
+        self.embedding = nn.Embedding(num_embeddings+1, embedding_dim, padding_idx=0)
         
         # Build stages with calculated channel counts
         self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0])
@@ -79,18 +78,15 @@ class RGCN(nn.Module):
         self.stage3 = self._make_stage(stage_channels[1], stage_channels[2], layers[2])
         self.stage4 = self._make_stage(stage_channels[2], stage_channels[3], layers[3])
         
-        # Channel reduction back to embedding_dim from final stage
-        self.channel_reduce = nn.Linear(stage_channels[3], embedding_dim)
-        
         self.use_lstm = use_lstm
         if use_lstm:
             self.lstm = nn.LSTM(embedding_dim, embedding_dim, batch_first=True)
         
         # Learnable global pooling and projection
         self.project = nn.Sequential(
-            nn.Linear(embedding_dim, 2*embedding_dim),
+            nn.Linear(stage_channels[3], embedding_dim),
             nn.GELU(),
-            nn.Linear(2*embedding_dim, num_logical_qubits)
+            nn.Linear(embedding_dim, num_logical_qubits)
         )
     
     def _make_stage(self, in_channels, out_channels, num_blocks):
@@ -120,7 +116,10 @@ class RGCN(nn.Module):
             'norm1': nn.BatchNorm1d(in_channels),
             'linear1': nn.Linear(in_channels, mid_channels),
             'norm2': nn.BatchNorm1d(mid_channels), 
-            'rgcn': nn.Linear(mid_channels*self.neighborhood_size, mid_channels),
+            # The rgcn convolves over space, but outputs 3x the dimension. 1st dimension is used for previous time
+            # second is  used for current time, third is for next time step (essentially break down)
+            # conv into space first then time. This is *exact* (no approximation) - but saves mem
+            'rgcn': nn.Linear(mid_channels*self.neighborhood_size, 3*mid_channels),
             'norm3': nn.BatchNorm1d(mid_channels),
             'linear2': nn.Linear(mid_channels, out_channels)
         })
@@ -138,9 +137,9 @@ class RGCN(nn.Module):
         
         layers = nn.ModuleDict({
             'norm1': nn.BatchNorm1d(in_channels),
-            'rgcn1': nn.Linear(in_channels*self.neighborhood_size, out_channels),
+            'rgcn1': nn.Linear(in_channels*self.neighborhood_size, 3*out_channels),
             'norm2': nn.BatchNorm1d(out_channels),
-            'rgcn2': nn.Linear(out_channels*self.neighborhood_size, out_channels)
+            'rgcn2': nn.Linear(out_channels*self.neighborhood_size, 3*out_channels)
         })
         
         # Skip connection with optional dimension matching
@@ -157,7 +156,7 @@ class RGCN(nn.Module):
             x: Node features (batch_size, num_nodes)
         """
         # Infer batch dimensions
-        batch_size, num_nodes = x.shape
+        batch_size, time, num_stabs = x.shape
         
         x = self.embedding(x) # (bs, num_nodes, embed dim)
         
@@ -170,20 +169,13 @@ class RGCN(nn.Module):
         x = self._forward_stage(self.stage3, x, neighbors)
         x = self._forward_stage(self.stage4, x, neighbors)
 
-        # x is now (batch_size, num_nodes, features)
-        # Reduce channels back to embedding_dim
-        x_flat = x.reshape(-1, x.size(-1))  # Flatten for linear: (batch_size * num_nodes, features)
-        x_flat = self.channel_reduce(x_flat)  # (batch_size * num_nodes, embedding_dim)
-        x = x_flat.reshape(batch_size, num_nodes, -1)  # Reshape back
-        
         if self.use_lstm:
             # For LSTM, we'd need to organize nodes by time
             # This is more complex for graphs - skip for now
             raise NotImplementedError("LSTM not implemented for RGCN yet")
         else:
             # Global mean pooling: (batch_size, num_nodes, features) -> (batch_size, features)
-            x = x.mean(dim=1)
-            
+            x = x.mean(dim=(-2, -3))
             return self.project(x)
 
     def _forward_stage(self, stage, x, neighbors):
@@ -246,72 +238,45 @@ class RGCNBlock(nn.Module):
         """
         # x: (batch_size, num_nodes, features)
         identity = x
-        batch_size, num_nodes, features = x.shape
+        batch_size, time, num_stabs, features = x.shape
         if self.use_bottleneck:
             # Bottleneck: norm -> linear -> norm -> rgcn -> norm -> linear
             
             # BatchNorm1d expects (batch, features) or (batch, features, length)
             # Permute to (batch_size, features, num_nodes) for BatchNorm1d
-            out = x.permute(0, 2, 1)  # (batch_size, features, num_nodes)
-            out = self.layers['norm1'](out)
-            out = out.permute(0, 2, 1)  # Back to (batch_size, num_nodes, features)
+            out = self.layers['norm1'](x.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(x)
             out = F.gelu(out)
             
-            # Linear layer: flatten, apply, reshape
-            out = out.reshape(-1, features)  # (batch_size * num_nodes, features)
             out = self.layers['linear1'](out)
-            mid_features = out.size(-1)
-            out = out.reshape(batch_size, num_nodes, mid_features)
             
             # Second norm
-            out = out.permute(0, 2, 1)
-            out = self.layers['norm2'](out)
-            out = out.permute(0, 2, 1) # (batch size, num_nodes, features)
+            out = self.layers['norm2'](out.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(out)
             out = F.gelu(out)
 
-            out = F.pad(out, (0,0,0,1,0,0)) # add a dummy node with zeros
-            # bs, num_nodes+1, features
-            out = self.layers['rgcn'](out[:, neighbors].flatten(start_dim=2))
+            x0, x1, x2 = self.layers['rgcn'](out[:, :, neighbors].flatten(start_dim=-2)).chunk(3, dim=-1)
+            out = F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0))
 
-            # Third norm
-            out = out.permute(0, 2, 1)
-            out = self.layers['norm3'](out)
-            out = out.permute(0, 2, 1)
+            out = self.layers['norm3'](out.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(out)
             out = F.gelu(out)
             
-            # Final linear
-            out = out.reshape(-1, out.size(-1))
             out = self.layers['linear2'](out)
-            out = out.reshape(batch_size, num_nodes, -1)
         else:
             # Basic: norm -> rgcn -> norm -> rgcn
             
             # First norm
-            out = x.permute(0, 2, 1)  # (batch_size, features, num_nodes)
-            out = self.layers['norm1'](out)
-            out = out.permute(0, 2, 1)  # Back to (batch_size, num_nodes, features)
+            out = self.layers['norm1'](x.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(x)
             out = F.gelu(out)
             
             # First RGCN
-            out = F.pad(out, (0,0,0,1,0,0)) # add a dummy node with zeros
-            # bs, num_nodes+1, features
-            out = self.layers['rgcn1'](out[:, neighbors].flatten(start_dim=2))
+            x0, x1, x2 = self.layers['rgcn1'](out[:, :, neighbors].flatten(start_dim=-2)).chunk(3, dim=-1)
+            out = F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0))
 
             # Second norm
-            out = out.permute(0, 2, 1)
-            out = self.layers['norm2'](out)
-            out = out.permute(0, 2, 1)
+            out = self.layers['norm2'](out.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(out)
             out = F.gelu(out)
             
             # Second RGCN
-            out = F.pad(out, (0,0,0,1,0,0)) # add a dummy node with zeros
-            # bs, num_nodes+1, features
-            out = self.layers['rgcn2'](out[:, neighbors].flatten(start_dim=2))
+            x0, x1, x2 = self.layers['rgcn2'](out[:, :, neighbors].flatten(start_dim=-2)).chunk(3, dim=-1)
+            out = F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0))
         
-        # Apply skip connection
-        # Always apply skip_path (it's either Identity or Linear)
-        identity_flat = identity.reshape(-1, features)
-        identity_flat = self.skip_path(identity_flat)
-        identity = identity_flat.reshape(batch_size, num_nodes, -1)
-        
-        return out + identity
+        return out + self.skip_path(identity)

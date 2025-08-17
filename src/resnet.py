@@ -61,7 +61,7 @@ class ResNet3D(nn.Module):
         # Embedding layer for detector states
         if num_embeddings is None:
             raise ValueError("num_embeddings is required")
-        self.embedding = nn.Embedding(num_embeddings, embedding_dim, padding_idx=0)
+        self.embedding = nn.Embedding(num_embeddings+1, embedding_dim, padding_idx=0)
         
         # Build stages with calculated channel counts
         self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0], dilation=1)
@@ -75,9 +75,9 @@ class ResNet3D(nn.Module):
         
         # Learnable spatial weighting and projection
         self.project = nn.Sequential(
-            nn.Linear(stage_channels[3], 2*embedding_dim),
+            nn.Linear(stage_channels[3], embedding_dim),
             nn.GELU(),
-            nn.Linear(2*embedding_dim, 1)
+            nn.Linear(embedding_dim, 1)
         )
     
     def _make_stage(self, in_channels, out_channels, num_blocks, dilation=1, stride=(1, 1, 1)):
@@ -163,6 +163,16 @@ class ResNet3D(nn.Module):
         return BottleneckBlock(layers, skip)
     
     def forward(self, x):
+        embedding = self.embed(x)
+        if self.use_lstm:
+            embedding = embedding.mean(dim=(-1, -2))  # (batch, embedding_dim, time)
+            embedding = embedding.permute(0, 2, 1)  # (batch, time, embedding_dim)
+            out, _ = self.lstm(embedding)  # (batch, time, embedding_dim)
+            return self.project(out[:,-1,:])
+        else:
+            return self.project(embedding.mean(dim=(-1,-2,-3)))  # (batch, time, 1)
+    
+    def embed(self, x):
         # Input: (batch, time, height, width)
         embedding = self.embedding(x)
         embedding = torch.permute(embedding, (0, 4, 1, 2, 3))  # (batch, embedding_dim, time, height, width)
@@ -172,14 +182,8 @@ class ResNet3D(nn.Module):
         embedding = self.stage2(embedding)  # 256 -> 512
         embedding = self.stage3(embedding)  # 512 -> 1024
         embedding = self.stage4(embedding)  # 1024 -> 2048
-        
-        if self.use_lstm:
-            embedding = embedding.mean(dim=(-1, -2))  # (batch, embedding_dim, time)
-            embedding = embedding.permute(0, 2, 1)  # (batch, time, embedding_dim)
-            out, _ = self.lstm(embedding)  # (batch, time, embedding_dim)
-            return self.project(out[:,-1,:])
-        else:
-            return self.project(embedding.mean(dim=(-1,-2,-3)))  # (batch, time, 1)
+        return embedding
+
 
     @classmethod
     def resnet18(cls, embedding_dim=128, stage3_stride=(1, 1, 1), stage4_stride=(1, 1, 1), channel_multipliers=None, num_embeddings=None):
