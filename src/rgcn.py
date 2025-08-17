@@ -70,7 +70,7 @@ class RGCN(nn.Module):
         # Input embedding layer for detector states
         if num_embeddings is None:
             raise ValueError("num_embeddings is required")
-        self.embedding = nn.Embedding(num_embeddings+1, embedding_dim, padding_idx=0)
+        self.embedding = nn.Embedding(num_embeddings+1, embedding_dim)
         
         # Build stages with calculated channel counts
         self.stage1 = self._make_stage(embedding_dim, stage_channels[0], layers[0])
@@ -157,7 +157,7 @@ class RGCN(nn.Module):
         """
         # Infer batch dimensions
         batch_size, time, num_stabs = x.shape
-        
+        # mask = (x > 0).float()
         x = self.embedding(x) # (bs, num_nodes, embed dim)
         
         # Use pre-registered static neighbors
@@ -254,7 +254,7 @@ class RGCNBlock(nn.Module):
             out = F.gelu(out)
 
             x0, x1, x2 = self.layers['rgcn'](out[:, :, neighbors].flatten(start_dim=-2)).chunk(3, dim=-1)
-            out = F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0))
+            out = ((F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0)))/math.sqrt(3))
 
             out = self.layers['norm3'](out.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(out)
             out = F.gelu(out)
@@ -269,7 +269,7 @@ class RGCNBlock(nn.Module):
             
             # First RGCN
             x0, x1, x2 = self.layers['rgcn1'](out[:, :, neighbors].flatten(start_dim=-2)).chunk(3, dim=-1)
-            out = F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0))
+            out = ((F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0)))/math.sqrt(3))
 
             # Second norm
             out = self.layers['norm2'](out.flatten(1,2).permute(0, 2, 1)).permute(0, 2, 1).view_as(out)
@@ -277,6 +277,6 @@ class RGCNBlock(nn.Module):
             
             # Second RGCN
             x0, x1, x2 = self.layers['rgcn2'](out[:, :, neighbors].flatten(start_dim=-2)).chunk(3, dim=-1)
-            out = F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0))
+            out = (F.pad(x0[:,:-1], (0,0,0,0,1,0,0,0)) + x1 + F.pad(x2[:,1:], (0,0,0,0,0,1,0,0)))/math.sqrt(3)
         
         return out + self.skip_path(identity)
