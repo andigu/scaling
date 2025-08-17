@@ -75,9 +75,9 @@ class ResNet3D(nn.Module):
         
         # Learnable spatial weighting and projection
         self.project = nn.Sequential(
-            nn.Linear(stage_channels[3], embedding_dim),
+            nn.Linear(stage_channels[3], 2*stage_channels[3]),
             nn.GELU(),
-            nn.Linear(embedding_dim, 1)
+            nn.Linear(2*stage_channels[3], 1)
         )
     
     def _make_stage(self, in_channels, out_channels, num_blocks, dilation=1, stride=(1, 1, 1)):

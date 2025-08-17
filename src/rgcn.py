@@ -84,9 +84,9 @@ class RGCN(nn.Module):
         
         # Learnable global pooling and projection
         self.project = nn.Sequential(
-            nn.Linear(stage_channels[3], embedding_dim),
+            nn.Linear(stage_channels[3], 2*stage_channels[3]),
             nn.GELU(),
-            nn.Linear(embedding_dim, num_logical_qubits)
+            nn.Linear(2*stage_channels[3], num_logical_qubits)
         )
     
     def _make_stage(self, in_channels, out_channels, num_blocks):
